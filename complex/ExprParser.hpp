@@ -19,7 +19,7 @@ private:
 
 public:
     bool accept(char);
-    bool accept(const std::string&);
+    bool accept(const std::string&, bool partial = false);
     bool expect(char);
 
     void skipSpaces();

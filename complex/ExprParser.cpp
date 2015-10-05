@@ -26,7 +26,7 @@ bool ExprParser::expect(char c) {
     return true;
 }
 
-bool ExprParser::accept(const std::string& id) {
+bool ExprParser::accept(const std::string& id, bool partial) {
     _loc.track();
 
     bool abort = false;
@@ -39,6 +39,9 @@ bool ExprParser::accept(const std::string& id) {
 
     if (abort) {
         _loc.backtrack();
+    } else if (!partial && std::isalnum(_loc.getCurrent())) {
+        _loc.backtrack();
+        abort = true;
     }
 
     return !abort;
@@ -117,8 +120,6 @@ bool ExprParser::readIdentifier(std::string& id) {
     this->skipSpaces();
 
     if (_loc.eof()) {
-        error("Expected identifier, not EOF");
-
         return false;
     }
 
@@ -167,12 +168,11 @@ Decl* ExprParser::parsePrint() {
 }
 
 void ExprParser::parseVar() {
-    const bool isVar = this->accept("var");
-    const bool isLet = this->accept("let");
+    bool isVar = this->accept("var");
+    bool isLet = false;
 
-    if (isVar && isLet) {
-        return error("Cannot use both");
-    }
+    if (!isVar)
+        isLet = this->accept("let");
 
     if (isVar || isLet) {
         std::string name;
