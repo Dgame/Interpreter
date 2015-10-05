@@ -17,7 +17,7 @@ struct Expr {
 
 struct VarExpr : public Expr {
     Expr* exp;
-    
+
     explicit VarExpr(Expr*);
 
     virtual std::ostream& print(std::ostream&) const;

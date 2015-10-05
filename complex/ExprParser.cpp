@@ -3,7 +3,6 @@
 
 #include <fstream>
 #include <locale>
-#include <map>
 
 bool ExprParser::accept(char c) {
     this->skipSpaces();
@@ -137,11 +136,9 @@ bool ExprParser::readIdentifier(std::string& id) {
         _loc.next();
     }
 
-    if (id == "print" ||
-        id == "let" ||
-        id == "var")
-    {
+    if (id == "print" || id == "var" || id == "let") {
         _loc.backtrack();
+
         return false;
     }
 
@@ -172,6 +169,10 @@ Decl* ExprParser::parsePrint() {
 void ExprParser::parseVar() {
     const bool isVar = this->accept("var");
     const bool isLet = this->accept("let");
+
+    if (isVar && isLet) {
+        return error("Cannot use both");
+    }
 
     if (isVar || isLet) {
         std::string name;
