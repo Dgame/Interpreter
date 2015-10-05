@@ -1,0 +1,6 @@
+let a = 3.14;
+var b = 42;
+print a, b;
+#a = 23;
+b = 23;
+print a, b;
