@@ -1,4 +1,4 @@
-OBJS = main.cpp Expression.cpp Declaration.cpp Location.cpp ExprParser.cpp
+OBJS = main.cpp Expression.cpp Declaration.cpp Location.cpp Interpreter.cpp Token.cpp
 CC = g++
 
 COMPILER_WARNINGS = -Wall -Wnon-virtual-dtor -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal -Winline -Wunreachable-code -Wmissing-declarations -Wmissing-include-dirs -Wmain -Wzero-as-null-pointer-constant -Wextra -pedantic -Wfatal-errors -Wno-switch

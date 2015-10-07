@@ -1,12 +1,12 @@
 #include <ostream>
-#include "ExprParser.hpp"
+#include "Interpreter.hpp"
 #include "Expression.hpp"
 
 int main() {
-    ExprParser ep;
+    Interpreter ip;
 
     try {
-        ep.parse("test.txt");
+        ip.parse("test.txt");
     } catch (const char* msg) {
         std::cerr << msg << std::endl;
     }
