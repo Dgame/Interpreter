@@ -20,10 +20,14 @@ EvalVisitor::EvalVisitor(const Expr* exp, std::ostream& out) : Visitor(out) {
     }
 }
 
+EvalVisitor EvalVisitor::cloneWith(const Expr* exp) {
+    return EvalVisitor(exp, _out);
+}
+
 void EvalVisitor::visit(const VarExpr* ve) {
     this->evaluated = true;
 
-    EvalVisitor ev(ve->exp, _out);
+    this->cloneWith(ve->exp);
 }
 
 void EvalVisitor::visit(const ArrayExpr* ae) {
@@ -34,7 +38,7 @@ void EvalVisitor::visit(const ArrayExpr* ae) {
         if (i != 0)
             _out << ", ";
 
-        EvalVisitor ev(exp.get(), _out);
+        this->cloneWith(exp.get());
 
         i++;
     }

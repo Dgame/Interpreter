@@ -45,6 +45,8 @@ struct EvalVisitor : public Visitor {
 
     explicit EvalVisitor(const Expr*, std::ostream&);
 
+    EvalVisitor cloneWith(const Expr*);
+
     virtual void visit(const VarExpr*);
     virtual void visit(const ArrayExpr*);
     virtual void visit(const IntExpr*);
