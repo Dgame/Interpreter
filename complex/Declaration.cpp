@@ -14,8 +14,7 @@ std::ostream& VarDecl::print(std::ostream& out) const {
 }
 
 void VarDecl::eval() const {
-    EvalVisitor ev;
-    this->exp->accept(&ev);
+    EvalVisitor ev(this->exp.get(), std::cout);
 }
 
 void PrintDecl::add(Expr* exp) {
@@ -34,17 +33,9 @@ std::ostream& PrintDecl::print(std::ostream& out) const {
 }
 
 void PrintDecl::eval() const {
-    EvalVisitor ev;
-    PrintVisitor pv(std::cout);
-
     for (auto& exp : this->exps) {
-        if (exp->needEvaluation()) {
-            exp->accept(&ev);
-            std::cout << ev.value;
-        } else {
-           exp->accept(&pv);
-        }
-        std::cout << ' ';
+        EvalVisitor ev(exp.get(), std::cout);
+        // std::cout << ' ';
     }
 
     std::cout << std::endl;

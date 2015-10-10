@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <string>
+#include <vector>
 #include <memory>
 #include <cmath>
 
@@ -18,6 +19,10 @@ struct Expr {
         return true;
     }
 
+    virtual std::ostream& print(std::ostream& out) const {
+        return out;
+    }
+
     virtual void accept(Visitor*) const = 0;
 };
 
@@ -29,10 +34,24 @@ struct VarExpr : public Expr {
     virtual void accept(Visitor*) const;
 };
 
+struct ArrayExpr : public Expr {
+    std::vector<std::unique_ptr<Expr>> exps;
+
+    void add(Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
 struct IntExpr : public Expr {
     i32_t value = 0;
 
     explicit IntExpr(i32_t);
+
+    virtual std::ostream& print(std::ostream& out) const {
+        out << this->value;
+
+        return out;
+    }
 
     virtual bool needEvaluation() const {
         return false;
@@ -46,6 +65,12 @@ struct FloatExpr : public Expr {
 
     explicit FloatExpr(f32_t);
 
+    virtual std::ostream& print(std::ostream& out) const {
+        out << this->value;
+
+        return out;
+    }
+
     virtual bool needEvaluation() const {
         return false;
     }
@@ -57,6 +82,12 @@ struct StringExpr : public Expr {
     std::string value;
 
     explicit StringExpr(const std::string&);
+
+    virtual std::ostream& print(std::ostream& out) const {
+        out << this->value;
+
+        return out;
+    }
 
     virtual bool needEvaluation() const {
         return false;

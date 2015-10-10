@@ -36,7 +36,7 @@ struct Loc {
     char getCurrent() const {
         if (this->eof())
             return '\0';
-        return *this->pos;
+        return *(this->pos);
     }
 
     /*

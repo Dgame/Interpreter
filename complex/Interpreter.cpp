@@ -92,8 +92,6 @@ Token Interpreter::readIdentifier() {
         return Token(Tok::None);
     }
 
-    _loc.track();
-
     std::string str;
     str.reserve(32);
 
@@ -183,8 +181,9 @@ void Interpreter::parse(const std::string& filename) {
             if (decl) {
 #if 0
                 decl->print(std::cout) << std::endl;
-#endif
+#else
                 decl->eval();
+#endif
             }
         }
     } else {
@@ -280,6 +279,49 @@ Decl* Interpreter::parsePrint() {
     return nullptr;
 }
 
+Expr* Interpreter::parseString() {
+    if (this->accept('"')) {
+        std::string str;
+        str.reserve(32);
+
+        while (!_loc.eof() && _loc.getCurrent() != '"') {
+            str += _loc.getCurrent();
+            _loc.next();
+        }
+
+        this->expect('"');
+
+        return new StringExpr(str);
+    }
+
+    return nullptr;
+}
+
+Expr* Interpreter::parseArray() {
+    if (this->accept('[')) {
+        ArrayExpr* aexp = new ArrayExpr();
+
+        while (!_loc.eof()) {
+            Expr* exp = this->parseExpr();
+            if (!exp) {
+                error("Expected valid Expression");
+                break;
+            }
+            aexp->add(exp);
+
+            if (!this->accept(',')) {
+                break;
+            }
+        }
+
+        this->expect(']');
+
+        return aexp;
+    }
+
+    return nullptr;
+}
+
 Expr* Interpreter::parseNumber() {
     const Token tok = this->readNumber();
 
@@ -295,6 +337,14 @@ Expr* Interpreter::parseNumber() {
 }
 
 Expr* Interpreter::parseExpr() {
+    this->skipSpaces();
+
+    if (_loc.getCurrent() == '"')
+        return this->parseString();
+
+    if (_loc.getCurrent() == '[')
+        return this->parseArray();
+
     Expr* lhs = this->parseTerm();
     if (!lhs)
         return nullptr;

@@ -7,6 +7,14 @@ void VarExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 
+void ArrayExpr::add(Expr* exp) {
+    this->exps.emplace_back(exp);
+}
+
+void ArrayExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
 IntExpr::IntExpr(i32_t val) : value(val) { }
 
 void IntExpr::accept(Visitor* v) const {

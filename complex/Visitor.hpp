@@ -5,10 +5,12 @@
 
 #include "types.hpp"
 
+struct Expr;
+struct VarExpr;
+struct ArrayExpr;
 struct IntExpr;
 struct FloatExpr;
 struct StringExpr;
-struct VarExpr;
 struct NegExpr;
 struct ParenExpr;
 struct AddExpr;
@@ -18,12 +20,16 @@ struct DivExpr;
 struct ModExpr;
 
 struct Visitor {
+    std::ostream& _out;
+
+    explicit Visitor(std::ostream&);
     virtual ~Visitor() { }
 
+    virtual void visit(const VarExpr*) = 0;
+    virtual void visit(const ArrayExpr*) = 0;
     virtual void visit(const IntExpr*) = 0;
     virtual void visit(const FloatExpr*) = 0;
     virtual void visit(const StringExpr*) = 0;
-    virtual void visit(const VarExpr*) = 0;
     virtual void visit(const NegExpr*) = 0;
     virtual void visit(const ParenExpr*) = 0;
     virtual void visit(const AddExpr*) = 0;
@@ -35,11 +41,15 @@ struct Visitor {
 
 struct EvalVisitor : public Visitor {
     f32_t value = 0;
+    bool evaluated = false;
 
+    explicit EvalVisitor(const Expr*, std::ostream&);
+
+    virtual void visit(const VarExpr*);
+    virtual void visit(const ArrayExpr*);
     virtual void visit(const IntExpr*);
     virtual void visit(const FloatExpr*);
     virtual void visit(const StringExpr*);
-    virtual void visit(const VarExpr*);
     virtual void visit(const NegExpr*);
     virtual void visit(const ParenExpr*);
     virtual void visit(const AddExpr*);
@@ -50,14 +60,13 @@ struct EvalVisitor : public Visitor {
 };
 
 struct PrintVisitor : public Visitor {
-    std::ostream& _out;
-
     explicit PrintVisitor(std::ostream&);
 
+    virtual void visit(const VarExpr*);
+    virtual void visit(const ArrayExpr*);
     virtual void visit(const IntExpr*);
     virtual void visit(const FloatExpr*);
     virtual void visit(const StringExpr*);
-    virtual void visit(const VarExpr*);
     virtual void visit(const NegExpr*);
     virtual void visit(const ParenExpr*);
     virtual void visit(const AddExpr*);

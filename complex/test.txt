@@ -10,3 +10,9 @@ let d = (1 + 2);
 let e = 3 * (1 + 2);
 
 print c, d, c * d, e;
+print "c = ", c, " & d = ", d, " & c * d = ", c * d, " & e = ", e;
+
+let arr = [1, 2, 3];
+
+print "arr = ", arr;
+print "mixed arr = ", [1, "Hallo"];

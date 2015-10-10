@@ -4,6 +4,40 @@
 #include <cassert>
 #include <cmath>
 
+Visitor::Visitor(std::ostream& out) : _out(out) { }
+
+EvalVisitor::EvalVisitor(const Expr* exp, std::ostream& out) : Visitor(out) {
+    if (exp->needEvaluation()) {
+        exp->accept(this);
+
+        if (!this->evaluated) {
+            out << this->value;
+
+            this->evaluated = true;
+        }
+    } else {
+        exp->print(out);
+    }
+}
+
+void EvalVisitor::visit(const VarExpr* ve) {
+    ve->exp->accept(this);
+}
+
+void EvalVisitor::visit(const ArrayExpr* ae) {
+    this->evaluated = true;
+
+    u32_t i = 0;
+    for (auto& exp : ae->exps) {
+        if (i != 0)
+            _out << ", ";
+
+        EvalVisitor ev(exp.get(), _out);
+
+        i++;
+    }
+}
+
 void EvalVisitor::visit(const IntExpr* ie) {
     this->value = ie->value;
 }
@@ -14,10 +48,6 @@ void EvalVisitor::visit(const FloatExpr* fe) {
 
 void EvalVisitor::visit(const StringExpr*) {
     assert(0);
-}
-
-void EvalVisitor::visit(const VarExpr* ve) {
-    ve->exp->accept(this);
 }
 
 void EvalVisitor::visit(const NegExpr* ne) {
@@ -79,7 +109,28 @@ void EvalVisitor::visit(const ModExpr* mod) {
     this->value = std::fmod(lhs, rhs);
 }
 
-PrintVisitor::PrintVisitor(std::ostream& out) : _out(out) { }
+PrintVisitor::PrintVisitor(std::ostream& out) : Visitor(out) { }
+
+void PrintVisitor::visit(const VarExpr* ve) {
+    _out << "<var : ";
+    ve->exp->accept(this);
+    _out << '>';
+}
+
+void PrintVisitor::visit(const ArrayExpr* ae) {
+    u32_t i = 0;
+
+    _out << '[';
+    for (auto& exp : ae->exps) {
+        if (i != 0)
+            _out << ',';
+
+        exp->accept(this);
+
+        i++;
+    }
+    _out << ']';
+}
 
 void PrintVisitor::visit(const IntExpr* ie) {
     _out << ie->value;
@@ -91,12 +142,6 @@ void PrintVisitor::visit(const FloatExpr* fe) {
 
 void PrintVisitor::visit(const StringExpr* se) {
     _out << se->value;
-}
-
-void PrintVisitor::visit(const VarExpr* ve) {
-    _out << "<var : ";
-    ve->exp->accept(this);
-    _out << '>';
 }
 
 void PrintVisitor::visit(const NegExpr* ne) {
@@ -139,4 +184,3 @@ void PrintVisitor::visit(const ModExpr* mod) {
     _out << " % ";
     mod->rhs->accept(this);
 }
-

@@ -38,6 +38,8 @@ public:
     void parseVarAssign();
 
     Decl* parsePrint();
+    Expr* parseString();
+    Expr* parseArray();
     Expr* parseNumber();
     Expr* parseExpr();
     Expr* parseTerm();
