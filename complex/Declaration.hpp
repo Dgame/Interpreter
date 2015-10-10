@@ -12,7 +12,7 @@ struct Decl {
     virtual ~Decl() { }
 
     virtual std::ostream& print(std::ostream&) const = 0;
-    virtual f32_t eval() const = 0;
+    virtual void eval() const = 0;
 };
 
 struct Expr;
@@ -25,7 +25,7 @@ struct VarDecl : public Decl {
     explicit VarDecl(const std::string&, Expr*);
 
     virtual std::ostream& print(std::ostream&) const;
-    virtual f32_t eval() const;
+    virtual void eval() const;
 };
 
 struct PrintDecl : public Decl {
@@ -34,7 +34,7 @@ struct PrintDecl : public Decl {
     void add(Expr*);
 
     virtual std::ostream& print(std::ostream&) const;
-    virtual f32_t eval() const;
+    virtual void eval() const;
 };
 
 #endif

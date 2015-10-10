@@ -180,8 +180,12 @@ void Interpreter::parse(const std::string& filename) {
             this->parseVar();
 
             std::unique_ptr<Decl> decl(this->parsePrint());
-            if (decl)
+            if (decl) {
+#if 0
+                decl->print(std::cout) << std::endl;
+#endif
                 decl->eval();
+            }
         }
     } else {
         error("Invalid file ", filename);
@@ -380,7 +384,7 @@ Expr* Interpreter::parseFactor() {
             if (vd) {
                 expr = new VarExpr(vd->exp.get());
             } else {
-                error("No such variable: ", tok.identifier);
+                error("Expected variable: ", tok.identifier);
 
                 return nullptr;
             }

@@ -1,17 +1,21 @@
 #include "Declaration.hpp"
 #include "Expression.hpp"
+#include "Visitor.hpp"
 
 VarDecl::VarDecl(const std::string& id, Expr* e) : name(id), exp(e) { }
 
 std::ostream& VarDecl::print(std::ostream& out) const {
     out << '<' << this->name << '>' << ':';
-    this->exp->print(out);
+
+    PrintVisitor pv(out);
+    this->exp->accept(&pv);
 
     return out;
 }
 
-f32_t VarDecl::eval() const {
-    return this->exp->eval();
+void VarDecl::eval() const {
+    EvalVisitor ev;
+    this->exp->accept(&ev);
 }
 
 void PrintDecl::add(Expr* exp) {
@@ -19,20 +23,29 @@ void PrintDecl::add(Expr* exp) {
 }
 
 std::ostream& PrintDecl::print(std::ostream& out) const {
+    PrintVisitor pv(out);
+
     out << "print ";
     for (auto& exp : this->exps) {
-        exp->print(out);
+        exp->accept(&pv);
     }
 
     return out;
 }
 
-f32_t PrintDecl::eval() const {
+void PrintDecl::eval() const {
+    EvalVisitor ev;
+    PrintVisitor pv(std::cout);
+
     for (auto& exp : this->exps) {
-        std::cout << exp->eval() << ' ';
+        if (exp->needEvaluation()) {
+            exp->accept(&ev);
+            std::cout << ev.value;
+        } else {
+           exp->accept(&pv);
+        }
+        std::cout << ' ';
     }
 
     std::cout << std::endl;
-
-    return 0;
 }

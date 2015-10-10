@@ -1,98 +1,72 @@
 #include "Expression.hpp"
+#include "Visitor.hpp"
 
 VarExpr::VarExpr(Expr* e) : exp(e) { }
 
-std::ostream& VarExpr::print(std::ostream& out) const {
-    this->exp->print(out);
-
-    return out;
+void VarExpr::accept(Visitor* v) const {
+    v->visit(this);
 }
 
-IntExpr::IntExpr(i32_t i) : ival(i) { }
+IntExpr::IntExpr(i32_t val) : value(val) { }
 
-std::ostream& IntExpr::print(std::ostream& out) const {
-    out << this->ival;
-
-    return out;
+void IntExpr::accept(Visitor* v) const {
+    v->visit(this);;
 }
 
-FloatExpr::FloatExpr(f32_t d) : dval(d) { }
+FloatExpr::FloatExpr(f32_t val) : value(val) { }
 
-std::ostream& FloatExpr::print(std::ostream& out) const {
-    out << this->dval;
+void FloatExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
 
-    return out;
+StringExpr::StringExpr(const std::string& val) : value(val) { }
+
+void StringExpr::accept(Visitor* v) const {
+    v->visit(this);
 }
 
 UnaExpr::UnaExpr(Expr* e) : exp(e) { }
 
 NegExpr::NegExpr(Expr* e) : UnaExpr(e) { }
 
-std::ostream& NegExpr::print(std::ostream& out) const {
-    out << '-';
-    this->exp->print(out);
-
-    return out;
+void NegExpr::accept(Visitor* v) const {
+    v->visit(this);
 }
 
 ParenExpr::ParenExpr(Expr* e) : UnaExpr(e) { }
 
-std::ostream& ParenExpr::print(std::ostream& out) const {
-    out << '(';
-    this->exp->print(out);
-    out << ')';
-
-    return out;
+void ParenExpr::accept(Visitor* v) const {
+    v->visit(this);
 }
 
 BinExpr::BinExpr(Expr* l, Expr* r) : lhs(l), rhs(r) { }
 
 AddExpr::AddExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
 
-std::ostream& AddExpr::print(std::ostream& out) const {
-    this->lhs->print(out);
-    out << " + ";
-    this->rhs->print(out);
-
-    return out;
+void AddExpr::accept(Visitor* v) const {
+    v->visit(this);
 }
 
 SubExpr::SubExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
 
-std::ostream& SubExpr::print(std::ostream& out) const {
-    this->lhs->print(out);
-    out << " - ";
-    this->rhs->print(out);
-
-    return out;
+void SubExpr::accept(Visitor* v) const {
+    v->visit(this);
 }
 
 MulExpr::MulExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
 
-std::ostream& MulExpr::print(std::ostream& out) const {
-    this->lhs->print(out);
-    out << " * ";
-    this->rhs->print(out);
-
-    return out;
+void MulExpr::accept(Visitor* v) const {
+    v->visit(this);
 }
 
 DivExpr::DivExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
 
-std::ostream& DivExpr::print(std::ostream& out) const {
-    this->lhs->print(out);
-    out << " / ";
-    this->rhs->print(out);
-
-    return out;
+void DivExpr::accept(Visitor* v) const {
+    v->visit(this);
 }
 
 ModExpr::ModExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
 
-std::ostream& ModExpr::print(std::ostream& out) const {
-    this->lhs->print(out);
-    out << " % ";
-    this->rhs->print(out);
-
-    return out;
+void ModExpr::accept(Visitor* v) const {
+    v->visit(this);
 }

@@ -2,17 +2,23 @@
 #define EXPRESSION_HPP
 
 #include <ostream>
+#include <string>
 #include <memory>
 #include <cmath>
 
 #include "types.hpp"
 #include "error.hpp"
 
+struct Visitor;
+
 struct Expr {
     virtual ~Expr() { }
 
-    virtual std::ostream& print(std::ostream&) const = 0;
-    virtual f32_t eval() const = 0;
+    virtual bool needEvaluation() const {
+        return true;
+    }
+
+    virtual void accept(Visitor*) const = 0;
 };
 
 struct VarExpr : public Expr {
@@ -20,35 +26,43 @@ struct VarExpr : public Expr {
 
     explicit VarExpr(Expr*);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return this->exp->eval();
-    }
+    virtual void accept(Visitor*) const;
 };
 
 struct IntExpr : public Expr {
-    i32_t ival = 0;
+    i32_t value = 0;
 
     explicit IntExpr(i32_t);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return this->ival;
+    virtual bool needEvaluation() const {
+        return false;
     }
+
+    virtual void accept(Visitor*) const;
 };
 
 struct FloatExpr : public Expr {
-    f32_t dval = 0;
+    f32_t value = 0;
 
     explicit FloatExpr(f32_t);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return this->dval;
+    virtual bool needEvaluation() const {
+        return false;
     }
+
+    virtual void accept(Visitor*) const;
+};
+
+struct StringExpr : public Expr {
+    std::string value;
+
+    explicit StringExpr(const std::string&);
+
+    virtual bool needEvaluation() const {
+        return false;
+    }
+
+    virtual void accept(Visitor*) const;
 };
 
 struct UnaExpr : public Expr {
@@ -60,21 +74,13 @@ struct UnaExpr : public Expr {
 struct NegExpr : public UnaExpr {
     explicit NegExpr(Expr*);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return this->exp->eval() * -1;
-    }
+    virtual void accept(Visitor*) const;
 };
 
 struct ParenExpr : public UnaExpr {
     explicit ParenExpr(Expr*);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return this->exp->eval();
-    }
+    virtual void accept(Visitor*) const;
 };
 
 struct BinExpr : public Expr {
@@ -87,51 +93,31 @@ struct BinExpr : public Expr {
 struct AddExpr : public BinExpr {
     explicit AddExpr(Expr*, Expr*);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return this->lhs->eval() + this->rhs->eval();
-    }
+    virtual void accept(Visitor*) const;
 };
 
 struct SubExpr : public BinExpr {
     explicit SubExpr(Expr*, Expr*);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return this->lhs->eval() - this->rhs->eval();
-    }
+    virtual void accept(Visitor*) const;
 };
 
 struct MulExpr : public BinExpr {
     explicit MulExpr(Expr*, Expr*);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return this->lhs->eval() * this->rhs->eval();
-    }
+    virtual void accept(Visitor*) const;
 };
 
 struct DivExpr : public BinExpr {
     explicit DivExpr(Expr*, Expr*);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return this->lhs->eval() / this->rhs->eval();
-    }
+    virtual void accept(Visitor*) const;
 };
 
 struct ModExpr : public BinExpr {
     explicit ModExpr(Expr*, Expr*);
 
-    virtual std::ostream& print(std::ostream&) const;
-
-    virtual f32_t eval() const {
-        return std::fmod(this->lhs->eval(), this->rhs->eval());
-    }
+    virtual void accept(Visitor*) const;
 };
 
 #endif
