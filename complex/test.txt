@@ -16,3 +16,7 @@ let arr = [1, 2, 3];
 
 print "arr = ", arr;
 print "mixed arr = ", [1, "Hallo"];
+
+let str = "Hallo, Welt!";
+
+print str;

@@ -21,7 +21,9 @@ EvalVisitor::EvalVisitor(const Expr* exp, std::ostream& out) : Visitor(out) {
 }
 
 void EvalVisitor::visit(const VarExpr* ve) {
-    ve->exp->accept(this);
+    this->evaluated = true;
+
+    EvalVisitor ev(ve->exp, _out);
 }
 
 void EvalVisitor::visit(const ArrayExpr* ae) {
