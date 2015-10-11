@@ -34,12 +34,6 @@ std::ostream& PrintDecl::print(std::ostream& out) const {
 
 void PrintDecl::eval() const {
     for (auto& exp : this->exps) {
-        // if (exp->needEvaluation()) {
-        //     EvalVisitor ev(exp.get());
-        //     std::cout << ev.value;
-        // } else {
-        //     exp->print(std::cout);
-        // }
         OutputVisitor(exp.get(), std::cout);
 
         std::cout << ' ';
