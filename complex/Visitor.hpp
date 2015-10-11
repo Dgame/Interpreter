@@ -7,9 +7,11 @@
 #include "types.hpp"
 
 struct Expr;
+struct NullExpr;
 struct VarExpr;
 struct ArrayExpr;
 struct IndexExpr;
+struct IndexAssignExpr;
 struct IntExpr;
 struct FloatExpr;
 struct CharExpr;
@@ -25,6 +27,10 @@ struct ModExpr;
 struct Visitor {
     virtual ~Visitor() { }
 
+    virtual void visit(const NullExpr*) {
+        assert(0);
+    }
+
     virtual void visit(const VarExpr*) {
         assert(0);
     }
@@ -34,6 +40,10 @@ struct Visitor {
     }
 
     virtual void visit(const IndexExpr*) {
+        assert(0);
+    }
+
+    virtual void visit(const IndexAssignExpr*) {
         assert(0);
     }
 
@@ -105,6 +115,7 @@ struct PrintVisitor : public Visitor {
 
     explicit PrintVisitor(std::ostream&);
 
+    virtual void visit(const NullExpr*);
     virtual void visit(const VarExpr*);
     virtual void visit(const ArrayExpr*);
     virtual void visit(const IndexExpr*);
@@ -126,6 +137,7 @@ struct OutputVisitor : public Visitor {
 
     explicit OutputVisitor(const Expr*, std::ostream&);
 
+    virtual void visit(const NullExpr*);
     virtual void visit(const VarExpr*);
     virtual void visit(const ArrayExpr*);
     virtual void visit(const IndexExpr*);

@@ -1,6 +1,10 @@
 #include "Expression.hpp"
 #include "Visitor.hpp"
 
+void NullExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
 VarExpr::VarExpr(const Expr* e) : exp(e) { }
 
 void VarExpr::accept(Visitor* v) const {
@@ -18,6 +22,12 @@ void ArrayExpr::accept(Visitor* v) const {
 IndexExpr::IndexExpr(const Expr* e, Expr* i) : exp(e), index(i) { }
 
 void IndexExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+IndexAssignExpr::IndexAssignExpr(const Expr* e, Expr* i, Expr* a) : IndexExpr(e, i), assign(a) { }
+
+void IndexAssignExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 

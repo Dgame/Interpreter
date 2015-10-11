@@ -18,6 +18,10 @@ struct Expr {
     virtual void accept(Visitor*) const = 0;
 };
 
+struct NullExpr : public Expr {
+    virtual void accept(Visitor*) const;
+};
+
 struct VarExpr : public Expr {
     const Expr* exp;
 
@@ -39,6 +43,14 @@ struct IndexExpr : public Expr {
     std::unique_ptr<Expr> index;
 
     explicit IndexExpr(const Expr*, Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
+struct IndexAssignExpr : public IndexExpr {
+    std::unique_ptr<Expr> assign;
+
+    explicit IndexAssignExpr(const Expr*, Expr*, Expr*);
 
     virtual void accept(Visitor*) const;
 };

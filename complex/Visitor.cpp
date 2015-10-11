@@ -86,6 +86,10 @@ void EvalVisitor::visit(const ModExpr* mod) {
 /// Print
 PrintVisitor::PrintVisitor(std::ostream& out) : _out(out) { }
 
+void PrintVisitor::visit(const NullExpr*) {
+    _out << "null";
+}
+
 void PrintVisitor::visit(const VarExpr* ve) {
     _out << "<var : ";
     ve->exp->accept(this);
@@ -174,6 +178,10 @@ void PrintVisitor::visit(const ModExpr* mod) {
 /// Output
 OutputVisitor::OutputVisitor(const Expr* exp, std::ostream& out) : _out(out) {
     exp->accept(this);
+}
+
+void OutputVisitor::visit(const NullExpr*) {
+    _out << "null";
 }
 
 void OutputVisitor::visit(const VarExpr* ve) {
