@@ -31,7 +31,7 @@ bool Interpreter::accept(Tok tok) {
 
 bool Interpreter::expect(char c) {
     if (!this->accept(c)) {
-        error("Expected ", c);
+        error(_loc, "Expected ", c);
 
         return false;
     }
@@ -41,7 +41,7 @@ bool Interpreter::expect(char c) {
 
 bool Interpreter::expect(Tok tok) {
     if (!this->accept(tok)) {
-        error("Expected Tok ", static_cast<i32_t>(tok));
+        error(_loc, "Expected Tok ", static_cast<i32_t>(tok));
 
         return false;
     }
@@ -68,12 +68,12 @@ void Interpreter::skipComment() {
 
 VarDecl* Interpreter::findVar(const std::string& id) {
     if (!id.empty()) {
-        for (auto it = _vars.rbegin(); it != _vars.rend(); it++) {
+        for (auto it = _vars.begin(); it != _vars.end(); it++) {
             if ((*it)->name == id)
                 return it->get();
         }
 
-        error("Unknown variable ", id);
+        error(_loc, "Unknown variable ", id);
     }
 
     return nullptr;
@@ -87,7 +87,7 @@ Token Interpreter::readIdentifier() {
     }
 
     if (!std::isalpha(_loc.getCurrent())) {
-        error("Expected identifier, not ", _loc.getCurrent());
+        error(_loc, "Expected identifier, not ", _loc.getCurrent());
 
         return Token(Tok::None);
     }
@@ -162,7 +162,7 @@ void Interpreter::parse(const std::string& filename) {
         std::vector<char> buffer(len);
         stream.read(&buffer[0], len);
 
-        _loc = Loc(&buffer.front(), &buffer.back());
+        _loc = Location(&buffer.front(), &buffer.back());
 
         /*
          * Ignore possible header
@@ -187,7 +187,7 @@ void Interpreter::parse(const std::string& filename) {
             }
         }
     } else {
-        error("Invalid file ", filename);
+        error(_loc, "Invalid file ", filename);
     }
 }
 
@@ -202,13 +202,13 @@ void Interpreter::parseVar() {
         const Token tok = this->readIdentifier();
 
         if (tok.type != Tok::Identifier) {
-            return error("Expected valid variable name, not ", tok.identifier);
+            return error(_loc, "Expected valid variable name, not ", tok.identifier);
         }
 
         this->expect('=');
         Expr* exp = this->parseExpr();
         if (!exp) {
-            return error("Expected valid Expression as assignment");
+            return error(_loc, "Expected valid Expression as assignment");
         }
         this->expect(';');
 
@@ -229,22 +229,20 @@ void Interpreter::parseVarAssign() {
     if (tok.type == Tok::Identifier) {
         VarDecl* vd = this->findVar(tok.identifier);
         if (!vd) {
-            return error("Cannot assign unknown variable ", tok.identifier);
+            return error(_loc, "Cannot assign unknown variable ", tok.identifier);
         }
 
         if (vd->isConst) {
-            error("Cannot modify const variable ", vd->name);
+            error(_loc, "Cannot modify const variable ", vd->name);
         } else {
             this->expect('=');
             Expr* exp = this->parseExpr();
             if (!exp) {
-                return error("Expected valid Expression as assignment");
+                return error(_loc, "Expected valid Expression as assignment");
             }
             this->expect(';');
 
-            VarDecl* decl = new VarDecl(vd->name, exp);
-
-            _vars.emplace_back(decl);
+            vd->assign(exp);
         }
     } else {
         _loc.backtrack();
@@ -257,7 +255,7 @@ Decl* Interpreter::parsePrint() {
         while (!_loc.eof()) {
             Expr* exp = this->parseExpr();
             if (!exp) {
-                error("Expected valid Expression for output");
+                error(_loc, "Expected valid Expression for output");
 
                 delete decl;
 
@@ -304,7 +302,7 @@ Expr* Interpreter::parseArray() {
         while (!_loc.eof()) {
             Expr* exp = this->parseExpr();
             if (!exp) {
-                error("Expected valid Expression");
+                error(_loc, "Expected valid Expression");
                 break;
             }
             aexp->add(exp);
@@ -336,6 +334,23 @@ Expr* Interpreter::parseNumber() {
     return new IntExpr(tok.integer);
 }
 
+Expr* Interpreter::parseIndexOf(const VarDecl* vd) {
+    Expr* expr = nullptr;
+
+    if (this->accept('[')) {
+        Expr* index = this->parseExpr();
+        if (!index) {
+            error(_loc, "Expected valid index Expression");
+        } else {
+            expr = new IndexExpr(vd->exp.get(), index);
+        }
+
+        this->expect(']');
+    }
+
+    return expr;
+}
+
 Expr* Interpreter::parseExpr() {
     this->skipSpaces();
 
@@ -353,7 +368,7 @@ Expr* Interpreter::parseExpr() {
         if (this->accept('+')) {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
-                error("Expected factor after +");
+                error(_loc, "Expected factor after +");
                 break;
             }
 
@@ -361,7 +376,7 @@ Expr* Interpreter::parseExpr() {
         } else if (this->accept('-')) {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
-                error("Expected factor after -");
+                error(_loc, "Expected factor after -");
                 break;
             }
 
@@ -382,7 +397,7 @@ Expr* Interpreter::parseTerm() {
         if (this->accept('*')) {
             Expr* rhs = this->parseFactor();
             if (!rhs) {
-                error("Expected factor after *");
+                error(_loc, "Expected factor after *");
                 break;
             }
 
@@ -390,7 +405,7 @@ Expr* Interpreter::parseTerm() {
         } else if (this->accept('/')) {
             Expr* rhs = this->parseFactor();
             if (!rhs) {
-                error("Expected factor after /");
+                error(_loc, "Expected factor after /");
                 break;
             }
 
@@ -398,7 +413,7 @@ Expr* Interpreter::parseTerm() {
         } else if (this->accept('%')) {
             Expr* rhs = this->parseFactor();
             if (!rhs) {
-                error("Expected factor after %");
+                error(_loc, "Expected factor after %");
                 break;
             }
 
@@ -420,21 +435,26 @@ Expr* Interpreter::parseFactor() {
         if (this->accept('(')) {
             expr = this->parseExpr();
             expr = new ParenExpr(expr);
+
             this->expect(')');
         } else {
             const Token tok = this->readIdentifier();
 
             if (tok.type != Tok::Identifier) {
-                error("Expected math factor or variable name");
+                error(_loc, "Expected math factor or variable name");
 
                 return nullptr;
             }
 
             VarDecl* vd = this->findVar(tok.identifier);
             if (vd) {
-                expr = new VarExpr(vd->exp.get());
+                if (_loc.getCurrent() == '[') {
+                    expr = this->parseIndexOf(vd);
+                } else {
+                    expr = new VarExpr(vd->exp.get());
+                }
             } else {
-                error("Expected variable: ", tok.identifier);
+                error(_loc, "Expected variable: ", tok.identifier);
 
                 return nullptr;
             }
@@ -443,7 +463,7 @@ Expr* Interpreter::parseFactor() {
 
     if (negate) {
         if (!expr)
-            error("Nothing that can be negated");
+            error(_loc, "Nothing that can be negated");
         else
             return new NegExpr(expr);
     }

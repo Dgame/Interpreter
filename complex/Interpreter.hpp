@@ -14,7 +14,7 @@ struct Expr;
 
 class Interpreter {
 private:
-    Loc _loc;
+    Location _loc;
 
     std::vector<std::unique_ptr<VarDecl>> _vars;
 
@@ -41,6 +41,7 @@ public:
     Expr* parseString();
     Expr* parseArray();
     Expr* parseNumber();
+    Expr* parseIndexOf(const VarDecl*);
     Expr* parseExpr();
     Expr* parseTerm();
     Expr* parseFactor();

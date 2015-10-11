@@ -4,6 +4,10 @@
 
 VarDecl::VarDecl(const std::string& id, Expr* e) : name(id), exp(e) { }
 
+void VarDecl::assign(Expr* e) {
+    this->exp.reset(e);
+}
+
 std::ostream& VarDecl::print(std::ostream& out) const {
     out << '<' << this->name << '>' << ':';
 
@@ -11,10 +15,6 @@ std::ostream& VarDecl::print(std::ostream& out) const {
     this->exp->accept(&pv);
 
     return out;
-}
-
-void VarDecl::eval() const {
-    EvalVisitor ev(this->exp.get(), std::cout);
 }
 
 void PrintDecl::add(Expr* exp) {
@@ -34,8 +34,15 @@ std::ostream& PrintDecl::print(std::ostream& out) const {
 
 void PrintDecl::eval() const {
     for (auto& exp : this->exps) {
-        EvalVisitor ev(exp.get(), std::cout);
-        // std::cout << ' ';
+        // if (exp->needEvaluation()) {
+        //     EvalVisitor ev(exp.get());
+        //     std::cout << ev.value;
+        // } else {
+        //     exp->print(std::cout);
+        // }
+        OutputVisitor(exp.get(), std::cout);
+
+        std::cout << ' ';
     }
 
     std::cout << std::endl;

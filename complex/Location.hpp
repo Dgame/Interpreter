@@ -3,7 +3,7 @@
 
 #include "types.hpp"
 
-struct Loc {
+struct Location {
     const char* first = nullptr;
     const char* last = nullptr;
     const char* pos = nullptr;
@@ -11,8 +11,8 @@ struct Loc {
 
     u32_t lineNr = 1;
 
-    Loc() = default;
-    explicit Loc(const char*, const char*);
+    Location() = default;
+    explicit Location(const char*, const char*);
 
     u32_t numOfReadChars() const {
         return this->pos - this->first;

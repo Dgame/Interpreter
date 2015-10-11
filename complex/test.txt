@@ -15,8 +15,12 @@ print "c = ", c, " & d = ", d, " & c * d = ", c * d, " & e = ", e;
 let arr = [1, 2, 3];
 
 print "arr = ", arr;
+
 print "mixed arr = ", [1, "Hallo"];
 
 let str = "Hallo, Welt!";
 
 print str;
+
+print arr[1], arr[1 + 1];
+print arr[1 + 1] + 1;

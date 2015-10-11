@@ -15,21 +15,13 @@ struct Visitor;
 struct Expr {
     virtual ~Expr() { }
 
-    virtual bool needEvaluation() const {
-        return true;
-    }
-
-    virtual std::ostream& print(std::ostream& out) const {
-        return out;
-    }
-
     virtual void accept(Visitor*) const = 0;
 };
 
 struct VarExpr : public Expr {
-    Expr* exp;
+    const Expr* exp;
 
-    explicit VarExpr(Expr*);
+    explicit VarExpr(const Expr*);
 
     virtual void accept(Visitor*) const;
 };
@@ -42,20 +34,19 @@ struct ArrayExpr : public Expr {
     virtual void accept(Visitor*) const;
 };
 
+struct IndexExpr : public Expr {
+    const Expr* exp;
+    std::unique_ptr<Expr> index;
+
+    explicit IndexExpr(const Expr*, Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
 struct IntExpr : public Expr {
     i32_t value = 0;
 
     explicit IntExpr(i32_t);
-
-    virtual std::ostream& print(std::ostream& out) const {
-        out << this->value;
-
-        return out;
-    }
-
-    virtual bool needEvaluation() const {
-        return false;
-    }
 
     virtual void accept(Visitor*) const;
 };
@@ -65,15 +56,13 @@ struct FloatExpr : public Expr {
 
     explicit FloatExpr(f32_t);
 
-    virtual std::ostream& print(std::ostream& out) const {
-        out << this->value;
+    virtual void accept(Visitor*) const;
+};
 
-        return out;
-    }
+struct CharExpr : public Expr {
+    char value = 0;
 
-    virtual bool needEvaluation() const {
-        return false;
-    }
+    explicit CharExpr(char);
 
     virtual void accept(Visitor*) const;
 };
@@ -82,16 +71,6 @@ struct StringExpr : public Expr {
     std::string value;
 
     explicit StringExpr(const std::string&);
-
-    virtual std::ostream& print(std::ostream& out) const {
-        out << this->value;
-
-        return out;
-    }
-
-    virtual bool needEvaluation() const {
-        return false;
-    }
 
     virtual void accept(Visitor*) const;
 };

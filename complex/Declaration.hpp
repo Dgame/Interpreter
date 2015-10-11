@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cassert>
 
 #include "types.hpp"
 
@@ -24,8 +25,13 @@ struct VarDecl : public Decl {
 
     explicit VarDecl(const std::string&, Expr*);
 
+    void assign(Expr*);
+
     virtual std::ostream& print(std::ostream&) const;
-    virtual void eval() const;
+
+    virtual void eval() const {
+        assert(0);
+    }
 };
 
 struct PrintDecl : public Decl {

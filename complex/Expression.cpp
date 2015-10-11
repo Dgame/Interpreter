@@ -1,7 +1,7 @@
 #include "Expression.hpp"
 #include "Visitor.hpp"
 
-VarExpr::VarExpr(Expr* e) : exp(e) { }
+VarExpr::VarExpr(const Expr* e) : exp(e) { }
 
 void VarExpr::accept(Visitor* v) const {
     v->visit(this);
@@ -12,6 +12,12 @@ void ArrayExpr::add(Expr* exp) {
 }
 
 void ArrayExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+IndexExpr::IndexExpr(const Expr* e, Expr* i) : exp(e), index(i) { }
+
+void IndexExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 
@@ -26,6 +32,12 @@ FloatExpr::FloatExpr(f32_t val) : value(val) { }
 void FloatExpr::accept(Visitor* v) const {
     v->visit(this);
 }
+
+CharExpr::CharExpr(char c) : value(c) { }
+
+void CharExpr::accept(Visitor* v) const {
+     v->visit(this);
+ }
 
 StringExpr::StringExpr(const std::string& val) : value(val) { }
 
