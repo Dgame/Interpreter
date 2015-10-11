@@ -33,7 +33,7 @@ void FloatExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 
-CharExpr::CharExpr(char c) : value(c) { }
+CharExpr::CharExpr(char val) : value(val) { }
 
 void CharExpr::accept(Visitor* v) const {
      v->visit(this);
