@@ -164,4 +164,11 @@ struct IndexVisitor : public Visitor {
     virtual void visit(const StringExpr*);
 };
 
+struct IndexAssignVisitor : public IndexVisitor {
+    explicit IndexVisitor(const IndexAssignExpr*, Visitor*);
+
+    virtual void visit(const ArrayExpr*);
+    virtual void visit(const StringExpr*);
+};
+
 #endif
