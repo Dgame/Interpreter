@@ -22,5 +22,7 @@ let str = "Hallo, Welt!";
 
 print str;
 
-print arr[1], arr[1 + 1];
-print arr[1 + 1] + 1;
+print "arr[1] = ", arr[1], " & arr[1 + 1] = ", arr[1 + 1];
+print "arr[1 + 1] + 1 = ", arr[1 + 1] + 1;
+
+print "4 | 8 = ", 4 | 8;
