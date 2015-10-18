@@ -25,11 +25,11 @@ void IndexExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 
-IndexAssignExpr::IndexAssignExpr(const Expr* e, Expr* i, Expr* a) : IndexExpr(e, i), assign(a) { }
+// IndexAssignExpr::IndexAssignExpr(Expr* e, Expr* i, Expr* a) : exp(e), index(i), assign(a) { }
 
-void IndexAssignExpr::accept(Visitor* v) const {
-    v->visit(this);
-}
+// void IndexAssignExpr::accept(Visitor* v) const {
+//     v->visit(this);
+// }
 
 IntExpr::IntExpr(i32_t val) : value(val) { }
 
@@ -98,5 +98,17 @@ void DivExpr::accept(Visitor* v) const {
 ModExpr::ModExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
 
 void ModExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+BitAndExpr::BitAndExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
+
+void BitAndExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+BitOrExpr::BitOrExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
+
+void BitOrExpr::accept(Visitor* v) const {
     v->visit(this);
 }

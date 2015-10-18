@@ -4,12 +4,12 @@
 #include "types.hpp"
 
 struct Location {
+    u32_t lineNr = 0;
+
     const char* first = nullptr;
     const char* last = nullptr;
     const char* pos = nullptr;
     const char* tracker = nullptr;
-
-    u32_t lineNr = 1;
 
     Location() = default;
     explicit Location(const char*, const char*);

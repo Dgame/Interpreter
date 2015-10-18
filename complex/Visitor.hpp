@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <cassert>
+#include <memory>
 
 #include "types.hpp"
 
@@ -11,7 +12,6 @@ struct NullExpr;
 struct VarExpr;
 struct ArrayExpr;
 struct IndexExpr;
-struct IndexAssignExpr;
 struct IntExpr;
 struct FloatExpr;
 struct CharExpr;
@@ -23,6 +23,8 @@ struct SubExpr;
 struct MulExpr;
 struct DivExpr;
 struct ModExpr;
+struct BitAndExpr;
+struct BitOrExpr;
 
 struct Visitor {
     virtual ~Visitor() { }
@@ -40,10 +42,6 @@ struct Visitor {
     }
 
     virtual void visit(const IndexExpr*) {
-        assert(0);
-    }
-
-    virtual void visit(const IndexAssignExpr*) {
         assert(0);
     }
 
@@ -90,11 +88,20 @@ struct Visitor {
     virtual void visit(const ModExpr*) {
         assert(0);
     }
+
+    virtual void visit(const BitAndExpr*) {
+        assert(0);
+    }
+
+    virtual void visit(const BitOrExpr*) {
+        assert(0);
+    }
 };
 
 struct EvalVisitor : public Visitor {
     f32_t value = 0;
 
+    EvalVisitor() = default;
     explicit EvalVisitor(const Expr*);
 
     virtual void visit(const VarExpr*);
@@ -108,6 +115,8 @@ struct EvalVisitor : public Visitor {
     virtual void visit(const MulExpr*);
     virtual void visit(const DivExpr*);
     virtual void visit(const ModExpr*);
+    virtual void visit(const BitAndExpr*);
+    virtual void visit(const BitOrExpr*);
 };
 
 struct PrintVisitor : public Visitor {
@@ -130,6 +139,8 @@ struct PrintVisitor : public Visitor {
     virtual void visit(const MulExpr*);
     virtual void visit(const DivExpr*);
     virtual void visit(const ModExpr*);
+    virtual void visit(const BitAndExpr*);
+    virtual void visit(const BitOrExpr*);
 };
 
 struct OutputVisitor : public Visitor {
@@ -152,20 +163,15 @@ struct OutputVisitor : public Visitor {
     virtual void visit(const MulExpr*);
     virtual void visit(const DivExpr*);
     virtual void visit(const ModExpr*);
+    virtual void visit(const BitAndExpr*);
+    virtual void visit(const BitOrExpr*);
 };
 
 struct IndexVisitor : public Visitor {
     Visitor* _visitor;
-    i32_t index = -1;
+    u32_t index = 0;
 
     explicit IndexVisitor(const IndexExpr*, Visitor*);
-
-    virtual void visit(const ArrayExpr*);
-    virtual void visit(const StringExpr*);
-};
-
-struct IndexAssignVisitor : public IndexVisitor {
-    explicit IndexVisitor(const IndexAssignExpr*, Visitor*);
 
     virtual void visit(const ArrayExpr*);
     virtual void visit(const StringExpr*);

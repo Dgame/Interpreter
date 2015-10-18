@@ -47,14 +47,6 @@ struct IndexExpr : public Expr {
     virtual void accept(Visitor*) const;
 };
 
-struct IndexAssignExpr : public IndexExpr {
-    std::unique_ptr<Expr> assign;
-
-    explicit IndexAssignExpr(const Expr*, Expr*, Expr*);
-
-    virtual void accept(Visitor*) const;
-};
-
 struct IntExpr : public Expr {
     i32_t value = 0;
 
@@ -138,6 +130,18 @@ struct DivExpr : public BinExpr {
 
 struct ModExpr : public BinExpr {
     explicit ModExpr(Expr*, Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
+struct BitAndExpr : public BinExpr {
+    explicit BitAndExpr(Expr*, Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
+struct BitOrExpr : public BinExpr {
+    explicit BitOrExpr(Expr*, Expr*);
 
     virtual void accept(Visitor*) const;
 };

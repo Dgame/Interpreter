@@ -1,7 +1,13 @@
 #include "Visitor.hpp"
 #include "Expression.hpp"
+#include "error.hpp"
 
 #include <cmath>
+#include <limits>
+
+inline bool AreSame(f32_t lhs, f32_t rhs) {
+    return std::fabs(lhs - rhs) < std::numeric_limits<f32_t>::epsilon();
+}
 
 /// Eval
 EvalVisitor::EvalVisitor(const Expr* exp) {
@@ -81,6 +87,40 @@ void EvalVisitor::visit(const ModExpr* mod) {
     const f32_t rhs = this->value;
 
     this->value = std::fmod(lhs, rhs);
+}
+
+void EvalVisitor::visit(const BitAndExpr* bae) {
+    bae->lhs->accept(this);
+    const f32_t my_lhs = this->value;
+
+    bae->rhs->accept(this);
+    const f32_t my_rhs = this->value;
+
+    const i32_t lhs = static_cast<i32_t>(my_lhs);
+    const i32_t rhs = static_cast<i32_t>(my_rhs);
+
+    if (!AreSame(my_lhs, lhs) || !AreSame(my_rhs, rhs)) {
+        error("Cannot use operator & for floats");
+    }
+
+    this->value = lhs & rhs;
+}
+
+void EvalVisitor::visit(const BitOrExpr* boe) {
+    boe->lhs->accept(this);
+    const f32_t my_lhs = this->value;
+
+    boe->rhs->accept(this);
+    const f32_t my_rhs = this->value;
+
+    const i32_t lhs = static_cast<i32_t>(my_lhs);
+    const i32_t rhs = static_cast<i32_t>(my_rhs);
+
+    if (!AreSame(my_lhs, lhs) || !AreSame(my_rhs, rhs)) {
+        error("Cannot use operator | for floats");
+    }
+
+    this->value = lhs | rhs;
 }
 
 /// Print
@@ -175,6 +215,18 @@ void PrintVisitor::visit(const ModExpr* mod) {
     mod->rhs->accept(this);
 }
 
+void PrintVisitor::visit(const BitAndExpr* bae) {
+    bae->lhs->accept(this);
+    _out << " & ";
+    bae->rhs->accept(this);
+}
+
+void PrintVisitor::visit(const BitOrExpr* boe) {
+    boe->lhs->accept(this);
+    _out << " | ";
+    boe->rhs->accept(this);
+}
+
 /// Output
 OutputVisitor::OutputVisitor(const Expr* exp, std::ostream& out) : _out(out) {
     exp->accept(this);
@@ -224,7 +276,8 @@ void OutputVisitor::visit(const StringExpr* se) {
 }
 
 void OutputVisitor::visit(const NegExpr* ne) {
-    EvalVisitor ev(ne->exp.get());
+    EvalVisitor ev;
+    ne->exp->accept(&ev);
 
     _out << ev.value * -1;
 }
@@ -263,28 +316,44 @@ void OutputVisitor::visit(const ModExpr* mod) {
     _out << ev.value;
 }
 
+void OutputVisitor::visit(const BitAndExpr* bae) {
+    EvalVisitor ev(bae);
+
+    _out << ev.value;
+}
+
+void OutputVisitor::visit(const BitOrExpr* boe) {
+    EvalVisitor ev(boe);
+
+    _out << ev.value;
+}
+
+
 /// Index
-IndexVisitor::IndexVisitor(const IndexExpr* iexp, Visitor* v) : _visitor(v) {
-    EvalVisitor ev(iexp->index.get());
+IndexVisitor::IndexVisitor(const IndexExpr* ie, Visitor* v) : _visitor(v) {
+    EvalVisitor ev;
+    ie->index->accept(&ev);
 
-    this->index = static_cast<i32_t>(ev.value);
+    if (ev.value < 0)
+        error("Index below 0");
 
-    iexp->exp->accept(this);
+    this->index = static_cast<u32_t>(ev.value);
+
+
+    ie->exp->accept(this);
 }
 
 void IndexVisitor::visit(const ArrayExpr* ae) {
-    if (this->index < 0 || static_cast<u32_t>(this->index) >= ae->exps.size()) {
-        std::cerr << "Invalid index " << this->index << "; max " << ae->exps.size() << std::endl;
-    } else {
-        ae->exps.at(this->index)->accept(_visitor);
-    }
+    if (this->index >= ae->exps.size())
+        error("Invalid index ", this->index, "; max ", ae->exps.size());
+
+    ae->exps.at(this->index)->accept(_visitor);
 }
 
 void IndexVisitor::visit(const StringExpr* se) {
-    if (this->index < 0 || static_cast<u32_t>(this->index) >= se->value.length()) {
-        std::cerr << "Invalid index " << this->index << "; max " << se->value.length() << std::endl;
-    } else {
-        auto str = std::make_unique<CharExpr>(se->value[this->index]);
-        str->accept(_visitor);
-    }
+    if (this->index >= se->value.length())
+        error("Invalid index ", this->index, "; max ", se->value.length());
+
+    auto ce = std::make_unique<CharExpr>(se->value[this->index]);
+    ce->accept(_visitor);
 }
