@@ -18,10 +18,9 @@ private:
     Location _loc;
     std::unique_ptr<Scope> _scope;
 
-    void _pushScope();
-    void _popScope();
+    void pushScope();
+    void popScope();
 
-public: // TODO: make all, except parse, private
     bool accept(char);
     bool accept(Tok);
 
@@ -34,7 +33,10 @@ public: // TODO: make all, except parse, private
     Token readIdentifier();
     Token readNumber();
 
+public:
     void parse(const std::string&);
+
+private:
     void parseVar();
     void parseVarAssign();
 

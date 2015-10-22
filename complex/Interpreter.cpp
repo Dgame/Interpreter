@@ -4,12 +4,12 @@
 #include <fstream>
 #include <locale>
 
-void Interpreter::_pushScope() {
+void Interpreter::pushScope() {
     Scope* sc = _scope.release();
     _scope.reset(new Scope(sc));
 }
 
-void Interpreter::_popScope() {
+void Interpreter::popScope() {
     Scope* sc = _scope->restore();
     _scope.reset(sc);
 }
