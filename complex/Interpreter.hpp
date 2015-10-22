@@ -8,6 +8,7 @@
 
 #include "Location.hpp"
 #include "Declaration.hpp"
+#include "Scope.hpp"
 #include "Token.hpp"
 
 struct Expr;
@@ -15,10 +16,12 @@ struct Expr;
 class Interpreter {
 private:
     Location _loc;
+    std::unique_ptr<Scope> _scope;
 
-    std::vector<std::unique_ptr<VarDecl>> _vars;
+    void _pushScope();
+    void _popScope();
 
-public:
+public: // TODO: make all, except parse, private
     bool accept(char);
     bool accept(Tok);
 
@@ -27,8 +30,6 @@ public:
 
     void skipSpaces();
     void skipComment();
-
-    VarDecl* findVar(const std::string&);
 
     Token readIdentifier();
     Token readNumber();
@@ -45,6 +46,7 @@ public:
     Expr* parseExpr();
     Expr* parseTerm();
     Expr* parseFactor();
+    Expr* parseVariableFactor();
 };
 
 #endif

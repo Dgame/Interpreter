@@ -9,7 +9,8 @@
 
 #include "types.hpp"
 
-struct Decl {
+class Decl {
+public:
     virtual ~Decl() { }
 
     virtual std::ostream& print(std::ostream&) const = 0;
@@ -18,12 +19,24 @@ struct Decl {
 
 struct Expr;
 
-struct VarDecl : public Decl {
-    std::string name;
-    bool isConst = false;
-    std::unique_ptr<Expr> exp;
+class VarDecl : public Decl {
+private:
+    std::string _name;
+    std::unique_ptr<Expr> _exp;
+    bool _isConst = false;
 
-    explicit VarDecl(const std::string&, Expr*);
+public:
+    explicit VarDecl(const std::string&, Expr*, bool);
+
+    const Expr* getExpr() const;
+
+    const std::string& getName() const {
+        return _name;
+    }
+
+    bool isConst() const {
+        return _isConst;
+    }
 
     void assign(Expr*);
 
@@ -34,9 +47,11 @@ struct VarDecl : public Decl {
     }
 };
 
-struct PrintDecl : public Decl {
-    std::vector<std::unique_ptr<Expr>> exps;
+class PrintDecl : public Decl {
+private:
+    std::vector<std::unique_ptr<Expr>> _exps;
 
+public:
     void add(Expr*);
 
     virtual std::ostream& print(std::ostream&) const;

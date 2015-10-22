@@ -4,6 +4,16 @@
 #include <fstream>
 #include <locale>
 
+void Interpreter::_pushScope() {
+    Scope* sc = _scope.release();
+    _scope.reset(new Scope(sc));
+}
+
+void Interpreter::_popScope() {
+    Scope* sc = _scope->restore();
+    _scope.reset(sc);
+}
+
 bool Interpreter::accept(char c) {
     this->skipSpaces();
 
@@ -64,19 +74,6 @@ void Interpreter::skipComment() {
                 break;
         }
     }
-}
-
-VarDecl* Interpreter::findVar(const std::string& id) {
-    if (!id.empty()) {
-        for (auto it = _vars.begin(); it != _vars.end(); it++) {
-            if ((*it)->name == id)
-                return it->get();
-        }
-
-        error("Unknown variable ", id, " @ ", _loc.lineNr);
-    }
-
-    return nullptr;
 }
 
 Token Interpreter::readIdentifier() {
@@ -148,6 +145,8 @@ Token Interpreter::readNumber() {
 }
 
 void Interpreter::parse(const std::string& filename) {
+    _scope = std::make_unique<Scope>();
+
     std::ifstream stream(filename);
     if (stream.good()) {
         /*
@@ -212,10 +211,9 @@ void Interpreter::parseVar() {
         }
         this->expect(';');
 
-        VarDecl* decl = new VarDecl(tok.identifier, exp);
-        decl->isConst = isLet;
+        VarDecl* vd = new VarDecl(tok.identifier, exp, isLet);
 
-        _vars.emplace_back(decl);
+        _scope->addVariable(vd);
     } else {
         this->parseVarAssign();
     }
@@ -227,13 +225,13 @@ void Interpreter::parseVarAssign() {
     const Token tok = this->readIdentifier();
 
     if (tok.type == Tok::Identifier) {
-        VarDecl* vd = this->findVar(tok.identifier);
+        VarDecl* vd = _scope->findVariable(tok.identifier);
         if (!vd) {
             return error("Cannot assign unknown variable ", tok.identifier, " @ ", _loc.lineNr);
         }
 
-        if (vd->isConst) {
-            error("Cannot modify const variable ", vd->name, " @ ", _loc.lineNr);
+        if (vd->isConst()) {
+            error("Cannot modify const variable ", vd->getName(), " @ ", _loc.lineNr);
         } else {
 /*
             Expr* index = nullptr;
@@ -263,13 +261,12 @@ void Interpreter::parseVarAssign() {
 
 Decl* Interpreter::parsePrint() {
     if (this->accept(Tok::Output)) {
-        PrintDecl* decl = new PrintDecl();
+        std::unique_ptr<PrintDecl> decl = std::make_unique<PrintDecl>();
+
         while (!_loc.eof()) {
             Expr* exp = this->parseExpr();
             if (!exp) {
                 error("Expected valid Expression for output", " @ ", _loc.lineNr);
-
-                delete decl;
 
                 return nullptr;
             }
@@ -283,7 +280,7 @@ Decl* Interpreter::parsePrint() {
 
         this->expect(';');
 
-        return decl;
+        return decl.release();
     }
 
     return nullptr;
@@ -354,7 +351,7 @@ Expr* Interpreter::parseIndexOf(const VarDecl* vd) {
         if (!index) {
             error("Expected valid index Expression", " @ ", _loc.lineNr);
         } else {
-            expr = new IndexExpr(vd->exp.get(), index);
+            expr = new IndexExpr(vd->getExpr(), index);
         }
 
         this->expect(']');
@@ -466,26 +463,7 @@ Expr* Interpreter::parseFactor() {
 
             this->expect(')');
         } else {
-            const Token tok = this->readIdentifier();
-
-            if (tok.type != Tok::Identifier) {
-                error("Expected math factor or variable name", " @ ", _loc.lineNr);
-
-                return nullptr;
-            }
-
-            VarDecl* vd = this->findVar(tok.identifier);
-            if (vd) {
-                if (_loc.getCurrent() == '[') {
-                    expr = this->parseIndexOf(vd);
-                } else {
-                    expr = new VarExpr(vd->exp.get());
-                }
-            } else {
-                error("Expected variable: ", tok.identifier, " @ ", _loc.lineNr);
-
-                return nullptr;
-            }
+            expr = this->parseVariableFactor();
         }
     }
 
@@ -497,4 +475,27 @@ Expr* Interpreter::parseFactor() {
     }
 
     return expr;
+}
+
+Expr* Interpreter::parseVariableFactor() {
+    const Token tok = this->readIdentifier();
+
+    if (tok.type != Tok::Identifier) {
+        error("Expected math factor or variable name", " @ ", _loc.lineNr);
+
+        return nullptr;
+    }
+
+    const VarDecl* vd = _scope->findVariable(tok.identifier);
+    if (vd) {
+        if (_loc.getCurrent() == '[') {
+            return this->parseIndexOf(vd);
+        }
+
+        return new VarExpr(vd->getExpr());
+    }
+
+    error("Expected variable: ", tok.identifier, " @ ", _loc.lineNr);
+
+    return nullptr;
 }
