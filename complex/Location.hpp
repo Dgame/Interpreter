@@ -39,6 +39,12 @@ struct Location {
         return *(this->pos);
     }
 
+    char peek() const {
+        if (this->eof())
+            return '\0';
+        return *(this->pos + 1);
+    }
+
     /*
     * Move to the next char: 'current' will now return the next character
     */

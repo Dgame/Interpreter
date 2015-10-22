@@ -2,20 +2,10 @@
 #define TOKEN_HPP
 
 #include <string>
+#include "Tok.hpp"
 #include "types.hpp"
 
-enum class Tok {
-    None,
-    Integer,
-    Decimal,
-    Boolean,
-    Character,
-    String,
-    Identifier,
-    Mutable,
-    Immutable,
-    Output
-};
+// enum class Tok;
 
 struct Token {
     Tok type;

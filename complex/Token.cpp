@@ -1,4 +1,5 @@
 #include "Token.hpp"
+#include "Tok.hpp"
 
 Token::Token(Tok tok) : type(tok) { }
 Token::Token(Tok tok, const std::string& str) : type(tok), identifier(str) { }
