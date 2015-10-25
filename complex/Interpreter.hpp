@@ -3,35 +3,25 @@
 
 #include <ostream>
 #include <memory>
-#include <vector>
 #include <string>
 
-#include "Location.hpp"
 #include "Declaration.hpp"
 #include "Scope.hpp"
-#include "Token.hpp"
+#include "Lexer.hpp"
 
 struct Expr;
 
 class Interpreter {
 private:
     Location _loc;
+    Lexer _lex;
     std::unique_ptr<Scope> _scope;
+
+    bool accept(Tok, Token* the_tok = nullptr);
+    bool expect(Tok);
 
     void pushScope();
     void popScope();
-
-    bool accept(char);
-    bool accept(Tok);
-
-    bool expect(char);
-    bool expect(Tok);
-
-    void skipSpaces();
-    void skipComment();
-
-    Token readIdentifier();
-    Token readNumber();
 
 public:
     void parse(const std::string&);

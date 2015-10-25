@@ -4,6 +4,20 @@
 #include <fstream>
 #include <locale>
 
+bool Interpreter::accept(Tok type, Token* the_tok) {
+    const Token tok = _loc.read();
+    if (the_tok)
+        *the_tok = tok;
+    return tok.type == type;
+}
+
+bool Interpreter::expect(Tok type) {
+    Token tok;
+    if (!this->accept(type, &tok)) {
+        error("Expected token ", static_cast<i32_t>(type), " @ ", tok.cursor.lineNr);
+    }
+}
+
 void Interpreter::pushScope() {
     Scope* sc = _scope.release();
     _scope.reset(new Scope(sc));
@@ -14,204 +28,32 @@ void Interpreter::popScope() {
     _scope.reset(sc);
 }
 
-bool Interpreter::accept(char c) {
-    this->skipSpaces();
-
-    if (_loc.getCurrent() == c) {
-        _loc.next();
-
-        return true;
-    }
-
-    return false;
-}
-
-bool Interpreter::accept(Tok tok) {
-    _loc.track();
-
-    const Token token = this->readIdentifier();
-    if (token.type != tok) {
-        _loc.backtrack();
-
-        return false;
-    }
-
-    return true;
-}
-
-bool Interpreter::expect(char c) {
-    if (!this->accept(c)) {
-        error("Expected ", c, " @ ", _loc.lineNr);
-
-        return false;
-    }
-
-    return true;
-}
-
-bool Interpreter::expect(Tok tok) {
-    if (!this->accept(tok)) {
-        error("Expected Tok ", static_cast<i32_t>(tok), " @ ", _loc.lineNr);
-
-        return false;
-    }
-
-    return true;
-}
-
-void Interpreter::skipSpaces() {
-    while (!_loc.eof() && std::isspace(_loc.getCurrent())) {
-        _loc.next();
-    }
-}
-
-void Interpreter::skipComment() {
-    while (!_loc.eof() && this->accept('#')) {
-        const u32_t line = _loc.lineNr;
-        while (!_loc.eof()) {
-            _loc.next();
-            if (line < _loc.lineNr)
-                break;
-        }
-    }
-}
-
-Token Interpreter::readIdentifier() {
-    this->skipSpaces();
-
-    if (_loc.eof()) {
-        return Token(Tok::None);
-    }
-
-    if (!std::isalpha(_loc.getCurrent())) {
-        error("Expected identifier, not ", _loc.getCurrent(), " @ ", _loc.lineNr);
-
-        return Token(Tok::None);
-    }
-
-    std::string str;
-    str.reserve(32);
-
-    while (!_loc.eof() && std::isalnum(_loc.getCurrent())) {
-        str += _loc.getCurrent();
-        _loc.next();
-    }
-
-    return Token::Identify(str);
-}
-
-Token Interpreter::readNumber() {
-    this->skipSpaces();
-
-    auto isValid = [this]() -> bool {
-        if (_loc.eof())
-            return false;
-        const char c = _loc.getCurrent();
-        return std::isdigit(c);
-    };
-
-    if (!isValid())
-        return Token(Tok::None);
-
-    Token token(Tok::Integer);
-
-    i32_t num = 0;
-    do {
-        num *= 10;
-        num += _loc.getCurrent() - '0';
-
-        _loc.next();
-    } while (isValid());
-
-    if (this->accept('.')) {
-        token.type = Tok::Decimal;
-
-        f32_t pot = 1;
-        i32_t dec = 0;
-        do {
-            pot *= 10;
-            dec *= 10;
-            dec += _loc.getCurrent() - '0';
-
-            _loc.next();
-        } while (isValid());
-
-        token.decimal = num + (dec / pot);
-    } else {
-        token.integer = num;
-    }
-
-    return token;
-}
-
-void Interpreter::parse(const std::string& filename) {
-    _scope = std::make_unique<Scope>();
-
-    std::ifstream stream(filename);
-    if (stream.good()) {
-        /*
-         * Get the size of the file
-         */
-        stream.seekg(0, std::ios::end);
-        const std::streampos len = stream.tellg();
-        stream.seekg(0, std::ios::beg);
-        /*
-         * Read the whole file into the buffer.
-         */
-        std::vector<char> buffer(len);
-        stream.read(&buffer[0], len);
-
-        _loc = Location(&buffer.front(), &buffer.back());
-
-        /*
-         * Ignore possible header
-         */
-        while (!_loc.eof() && !std::isalnum(_loc.getCurrent())) {
-            _loc.next();
-        }
-
-        while (!_loc.eof()) {
-            this->skipSpaces();
-            this->skipComment();
-
-            this->parseVar();
-
-            std::unique_ptr<Decl> decl(this->parsePrint());
-            if (decl) {
-#if 0
-                decl->print(std::cout) << std::endl;
-#else
-                decl->eval();
-#endif
-            }
-        }
-    } else {
-        error("Invalid file ", filename);
+void Interpreter::parse(const std::string& filename) : _lex(filename), _scope(new Scope()) {
+    while (true) {
+        this->parseVar();
+        this->parsePrint();
     }
 }
 
 void Interpreter::parseVar() {
-    bool isVar = this->accept(Tok::Mutable);
-    bool isLet = false;
+    const Token tok1 = _lex.read();
 
-    if (!isVar)
-        isLet = this->accept(Tok::Immutable);
+    if (tok1.type == Tok::Mutable || tok1.type == Tok::Immutable) {
+        const Token tok2 = _lex.read();
 
-    if (isVar || isLet) {
-        const Token tok = this->readIdentifier();
-
-        if (tok.type != Tok::Identifier) {
-            return error("Expected valid variable name, not ", tok.identifier, " @ ", _loc.lineNr);
+        if (tok2.type != Tok::Identifier) {
+            return error("Expected valid variable name, not ", tok2.identifier, " @ ", tok2.cursor.lineNr);
         }
 
         this->expect('=');
+
         Expr* exp = this->parseExpr();
         if (!exp) {
-            return error("Expected valid Expression as assignment", " @ ", _loc.lineNr);
+            return error("Expected valid Expression as assignment", " @ ", tok2.cursor.lineNr);
         }
         this->expect(';');
 
-        VarDecl* vd = new VarDecl(tok.identifier, exp, isLet);
+        VarDecl* vd = new VarDecl(tok.identifier, exp, tok1 == Tok::Immutable);
 
         _scope->addVariable(vd);
     } else {
@@ -220,18 +62,18 @@ void Interpreter::parseVar() {
 }
 
 void Interpreter::parseVarAssign() {
-    _loc.track();
-
-    const Token tok = this->readIdentifier();
+    const Token tok = _lex.peek();
 
     if (tok.type == Tok::Identifier) {
+        _lex.read();
+
         VarDecl* vd = _scope->findVariable(tok.identifier);
         if (!vd) {
-            return error("Cannot assign unknown variable ", tok.identifier, " @ ", _loc.lineNr);
+            return error("Cannot assign unknown variable ", tok.identifier, " @ ", _loc.cursor.lineNr);
         }
 
         if (vd->isConst()) {
-            error("Cannot modify const variable ", vd->getName(), " @ ", _loc.lineNr);
+            error("Cannot modify const variable ", vd->getName(), " @ ", _loc.cursor.lineNr);
         } else {
 /*
             Expr* index = nullptr;
@@ -244,7 +86,7 @@ void Interpreter::parseVarAssign() {
 
             Expr* exp = this->parseExpr();
             if (!exp) {
-                return error("Expected valid Expression as assignment", " @ ", _loc.lineNr);
+                return error("Expected valid Expression as assignment", " @ ", _loc.cursor.lineNr);
             }
             this->expect(';');
 /*
@@ -254,26 +96,24 @@ void Interpreter::parseVarAssign() {
 */
             vd->assign(exp);
         }
-    } else {
-        _loc.backtrack();
     }
 }
 
 Decl* Interpreter::parsePrint() {
-    if (this->accept(Tok::Output)) {
+    if (_lex.read().type == Tok::Output) {
         std::unique_ptr<PrintDecl> decl = std::make_unique<PrintDecl>();
 
-        while (!_loc.eof()) {
+        while (true) {
             Expr* exp = this->parseExpr();
             if (!exp) {
-                error("Expected valid Expression for output", " @ ", _loc.lineNr);
+                error("Expected valid Expression for output", " @ ", _loc.cursor.lineNr);
 
                 return nullptr;
             }
 
             decl->add(exp);
 
-            if (!this->accept(',')) {
+            if (_lex.read().type != Tok::Comma) {
                 break;
             }
         }

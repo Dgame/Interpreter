@@ -1,25 +1,24 @@
 #include "Token.hpp"
-#include "Tok.hpp"
 
-Token::Token(Tok tok) : type(tok) { }
-Token::Token(Tok tok, const std::string& str) : type(tok), identifier(str) { }
+Token::Token(const Cursor& cur, Tok tok) : cursor(cur), type(tok) { }
+Token::Token(const Cursor& cur, Tok tok, const std::string& str) : cursor(cur), type(tok), identifier(str) { }
 
-Token Token::Identify(const std::string& str) {
+Token Token::Identify(const Cursor& cur, const std::string& str) {
     if (str.empty()) {
-        return Token(Tok::None);
+        return Token(cur, Tok::None);
     }
 
     if (str == "print") {
-        return Token(Tok::Output, str);
+        return Token(cur, Tok::Output, str);
     }
 
     if (str == "var") {
-        return Token(Tok::Mutable, str);
+        return Token(cur, Tok::Mutable, str);
     }
 
     if (str == "let") {
-        return Token(Tok::Immutable, str);
+        return Token(cur, Tok::Immutable, str);
     }
 
-    return Token(Tok::Identifier, str);
+    return Token(cur, Tok::Identifier, str);
 }

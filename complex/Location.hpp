@@ -2,9 +2,10 @@
 #define LOCATION_HPP
 
 #include "types.hpp"
+#include "Cursor.hpp"
 
 struct Location {
-    u32_t lineNr = 0;
+    Cursor cursor;
 
     const char* first = nullptr;
     const char* last = nullptr;
@@ -33,28 +34,13 @@ struct Location {
     /*
     * Returns the current character, if any
     */
-    char getCurrent() const {
-        if (this->eof())
-            return '\0';
-        return *(this->pos);
-    }
-
-    char peek() const {
-        if (this->eof())
-            return '\0';
-        return *(this->pos + 1);
-    }
+    char getCurrent() const;
+    char peek() const;
 
     /*
     * Move to the next char: 'current' will now return the next character
     */
-    void next() {
-        if (this->eof())
-            return;
-        if (this->getCurrent() == '\n')
-            this->lineNr++;
-        this->pos++;
-    }
+    void next();
 
     /*
     * True if we reached the end of file.
@@ -62,6 +48,16 @@ struct Location {
     bool eof() const {
         return this->pos > this->last || *this->pos == '\0';
     }
+
+    bool isDigit() const;
+    bool isSpace() const;
+    bool isAlpha() const;
+    bool isAlphaNumeric() const;
+
+    bool isNextDigit() const;
+    bool isNextSpace() const;
+    bool isNextAlpha() const;
+    bool isNextAlphaNumeric() const;
 };
 
 #endif

@@ -1,11 +1,9 @@
 #include "Lexer.hpp"
-// #include "Tok.hpp"
 #include "types.hpp"
 #include "error.hpp"
 
 #include <fstream>
 #include <sstream>
-#include <locale>
 
 Lexer::Lexer(const std::string& filename) {
     std::ifstream stream(filename);
@@ -20,7 +18,7 @@ Lexer::Lexer(const std::string& filename) {
         /*
          * Ignore possible header
          */
-        while (!_loc.eof() && !std::isalnum(_loc.getCurrent())) {
+        while (!_loc.eof() && !_loc.isAlphaNumeric()) {
             _loc.next();
         }
     } else {
@@ -29,7 +27,7 @@ Lexer::Lexer(const std::string& filename) {
 }
 
 void Lexer::skipSpaces() {
-    while (!_loc.eof() && std::isspace(_loc.getCurrent())) {
+    while (!_loc.eof() && _loc.isSpace()) {
         _loc.next();
     }
 }
@@ -61,7 +59,7 @@ bool Lexer::accept(Tok type) {
 
 bool Lexer::expect(char c) {
     if (!this->accept(c)) {
-        error("Expected ", c, " @ ", _loc.lineNr);
+        error("Expected ", c, " @ ", _loc.cursor.lineNr);
 
         return false;
     }
@@ -71,7 +69,7 @@ bool Lexer::expect(char c) {
 
 bool Lexer::expect(Tok type) {
     if (!this->accept(type)) {
-        error("Expected Tok ", static_cast<i32_t>(type), " @ ", _loc.lineNr);
+        error("Expected Tok ", static_cast<i32_t>(type), " @ ", _loc.cursor.lineNr);
 
         return false;
     }
@@ -84,7 +82,7 @@ Token Lexer::read() {
         switch (_loc.getCurrent()) {
             case 0:
             case 0x1A:
-                return Token(Tok::Eof);
+                return Token(_loc.cursor, Tok::Eof);
             case ' ':
             case '\t':
             case '\v':
@@ -94,69 +92,69 @@ Token Lexer::read() {
             case '\r':
                 _loc.next();
                 if (_loc.getCurrent() != '\n') // if CR stands by itself
-                    _loc.lineNr++;
+                    _loc.cursor.lineNr++;
                 continue;
             case '\n':
                 _loc.next();
                 continue;
             case '+':
                 _loc.next();
-                return Token(Tok::Plus);
+                return Token(_loc.cursor, Tok::Plus);
             case '-':
                 _loc.next();
-                return Token(Tok::Minus);
+                return Token(_loc.cursor, Tok::Minus);
             case '*':
                 _loc.next();
-                return Token(Tok::Mul);
+                return Token(_loc.cursor, Tok::Mul);
             case '/':
                 _loc.next();
-                return Token(Tok::Div);
+                return Token(_loc.cursor, Tok::Div);
             case '%':
                 _loc.next();
-                return Token(Tok::Mod);
+                return Token(_loc.cursor, Tok::Mod);
             case '(':
                 _loc.next();
-                return Token(Tok::LeftParen);
+                return Token(_loc.cursor, Tok::LeftParen);
             case ')':
                 _loc.next();
-                return Token(Tok::RightParen);
+                return Token(_loc.cursor, Tok::RightParen);
             case '[':
                 _loc.next();
-                return Token(Tok::LeftBracket);
+                return Token(_loc.cursor, Tok::LeftBracket);
             case ']':
                 _loc.next();
-                return Token(Tok::RightBracket);
+                return Token(_loc.cursor, Tok::RightBracket);
             case '{':
                 _loc.next();
-                return Token(Tok::LeftCurly);
+                return Token(_loc.cursor, Tok::LeftCurly);
             case '}':
                 _loc.next();
-                return Token(Tok::RightCurly);
+                return Token(_loc.cursor, Tok::RightCurly);
             case ',':
                 _loc.next();
-                return Token(Tok::Comma);
+                return Token(_loc.cursor, Tok::Comma);
             case '.':
                 _loc.next();
-                return Token(Tok::Dot);
+                return Token(_loc.cursor, Tok::Dot);
             case ':':
                 _loc.next();
-                return Token(Tok::Colon);
+                return Token(_loc.cursor, Tok::Colon);
             case ';':
                 _loc.next();
-                return Token(Tok::Semicolon);
+                return Token(_loc.cursor, Tok::Semicolon);
             case '=':
                 _loc.next();
                 if (_loc.getCurrent() == '=') {
                     _loc.next();
-                    return Token(Tok::Equal);
+                    return Token(_loc.cursor, Tok::Equal);
                 }
 
-                return Token(Tok::Assign);
+                return Token(_loc.cursor, Tok::Assign);
             case '!':
                 _loc.next();
                 if (_loc.getCurrent() == '=') {
                     _loc.next();
-                    return Token(Tok::NotEqual);
+                    return Token(_loc.cursor, Tok::NotEqual);
                 }
 
                 return Token(Tok::Not);
@@ -164,40 +162,40 @@ Token Lexer::read() {
                 _loc.next();
                 if (_loc.getCurrent() == '&') {
                     _loc.next();
-                    return Token(Tok::LogicAnd);
+                    return Token(_loc.cursor, Tok::LogicAnd);
                 }
 
-                return Token(Tok::BitAnd);
+                return Token(_loc.cursor, Tok::BitAnd);
             case '|':
                 _loc.next();
                 if (_loc.getCurrent() == '|') {
                     _loc.next();
-                    return Token(Tok::LogicOr);
+                    return Token(_loc.cursor, Tok::LogicOr);
                 }
 
-                return Token(Tok::BitOr);
+                return Token(_loc.cursor, Tok::BitOr);
             case '^':
                 _loc.next();
-                return Token(Tok::BitXor);
+                return Token(_loc.cursor, Tok::BitXor);
             case '~':
                 _loc.next();
-                return Token(Tok::BitNot);
+                return Token(_loc.cursor, Tok::BitNot);
             case '>':
                 _loc.next();
                 if (_loc.getCurrent() == '=') {
                     _loc.next();
-                    return Token(Tok::GreaterEqual);
+                    return Token(_loc.cursor, Tok::GreaterEqual);
                 }
 
-                return Token(Tok::Greater);
+                return Token(_loc.cursor, Tok::Greater);
             case '<':
                 _loc.next();
                 if (_loc.getCurrent() == '=') {
                     _loc.next();
-                    return Token(Tok::LowerEqual);
+                    return Token(_loc.cursor, Tok::LowerEqual);
                 }
 
-                return Token(Tok::Lower);
+                return Token(_loc.cursor, Tok::Lower);
             case '\'':
                 return this->readCharacter();
             case '"':
@@ -215,7 +213,7 @@ Token Lexer::read() {
                             if (_loc.peek() == '\n')
                                 _loc.next();
                             else
-                                _loc.lineNr++;
+                                _loc.cursor.lineNr++;
                         break;
                         default:
                             _loc.next();
@@ -229,49 +227,46 @@ Token Lexer::read() {
             }
             default:
             {
-                const char c = _loc.getCurrent();
-
-                if (std::isalpha(c) || c == '_') {
+                if (_loc.isAlpha() || _loc.getCurrent() == '_')
                     return this->readIdentifier();
-                }
 
-                if (std::isdigit(c) || (c == '-' && std::isdigit(_loc.peek()))) {
+                if (_loc.isDigit() || (_loc.getCurrent() == '-' && _loc.isNextDigit())) {
                     return this->readNumber();
                 }
 
-                return Token(Tok::Eof);
+                return Token(_loc.cursor, Tok::Eof);
             }
         }
     }
 
-    return Token(Tok::Eof);
+    return Token(_loc.cursor, Tok::Eof);
 }
 
 Token Lexer::readIdentifier() {
-    if (!std::isalpha(_loc.getCurrent())) {
+    if (!_loc.isAlpha()) {
         error("Expected identifier, not ", _loc.getCurrent(), " @ ", _loc.lineNr);
 
-        return Token(Tok::None);
+        return Token(_loc.cursor, Tok::None);
     }
 
     std::string str;
     str.reserve(32);
 
-    while (std::isalnum(_loc.getCurrent())) {
+    while (_loc.isAlphaNumeric()) {
         str += _loc.getCurrent();
         _loc.next();
     }
 
-    return Token::Identify(str);
+    return Token::Identify(_loc.cursor, str);
 }
 
 Token Lexer::readNumber() {
     const bool isNegative = this->accept('-');
 
-    if (!std::isdigit(_loc.getCurrent()))
-        return Token(Tok::None);
+    if (!_loc.isDigit())
+        return Token(_loc.cursor, Tok::None);
 
-    Token tok(Tok::Integer);
+    Token tok(_loc.cursor, Tok::Integer);
 
     i32_t num = 0;
     do {
@@ -279,7 +274,7 @@ Token Lexer::readNumber() {
         num += _loc.getCurrent() - '0';
 
         _loc.next();
-    } while (!_loc.eof() && std::isdigit(_loc.getCurrent()));
+    } while (!_loc.eof() && _loc.isDigit());
 
     if (this->accept('.')) {
         tok.type = Tok::Decimal;
@@ -292,7 +287,7 @@ Token Lexer::readNumber() {
             dec += _loc.getCurrent() - '0';
 
             _loc.next();
-        } while (!_loc.eof() && std::isdigit(_loc.getCurrent()));
+        } while (!_loc.eof() && _loc.isDigit());
 
         tok.decimal = num + (dec / pot);
 
@@ -310,14 +305,10 @@ Token Lexer::readNumber() {
 
 Token Lexer::readCharacter() {
     this->expect('\'');
-
     const char c = _loc.getCurrent();
-    _loc.next();
+    this->expect('\'');
 
-    if (_loc.getCurrent() != '\'')
-        error("Invalid character (too wide)");
-
-    Token tok(Tok::Character);
+    Token tok(_loc.cursor, Tok::Character);
     tok.character = c;
 
     return tok;
@@ -334,9 +325,9 @@ Token Lexer::readString() {
         _loc.next();
     }
 
-    _loc.next();
+    this->expect('"');
 
-    return Token(Tok::String, str);
+    return Token(_loc.cursor, Tok::String, str);
 }
 
 Token Lexer::peek() {

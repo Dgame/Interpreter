@@ -3,11 +3,11 @@
 
 #include <string>
 #include "Tok.hpp"
+#include "Cursor.hpp"
 #include "types.hpp"
 
-// enum class Tok;
-
 struct Token {
+    Cursor cursor;
     Tok type;
 
     union {
@@ -19,10 +19,10 @@ struct Token {
 
     std::string identifier;
 
-    explicit Token(Tok);
-    explicit Token(Tok, const std::string&);
+    explicit Token(const Cursor&, Tok);
+    explicit Token(const Cursor&, Tok, const std::string&);
 
-    static Token Identify(const std::string&);
+    static Token Identify(const Cursor&, const std::string&);
 };
 
 #endif
