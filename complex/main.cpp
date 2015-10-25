@@ -1,19 +1,20 @@
 #include <iostream>
-// #include "Interpreter.hpp"
-// #include "Expression.hpp"
-#include "Lexer.hpp"
+#include "Interpreter.hpp"
+#include "Expression.hpp"
+// #include "Lexer.hpp"
 
 int main() {
-    // Interpreter ip;
-
-    // try {
-    //     ip.parse("test.txt");
-    // } catch (const char* msg) {
-    //     std::cerr << msg << std::endl;
-    // }
+    Interpreter ip;
 
     try {
-        Lexer lex("test.txt");
+        ip.parse("test.txt");
+    } catch (const char* msg) {
+        std::cerr << msg << std::endl;
+    }
+/*
+    try {
+        Lexer lex;
+        lex.load("test.txt");
 
         while (true) {
             const Token tok = lex.read();
@@ -149,4 +150,5 @@ int main() {
      } catch (const std::string& msg) {
         std::cerr << msg << std::endl;
     }
+    */
 }

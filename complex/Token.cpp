@@ -1,5 +1,6 @@
 #include "Token.hpp"
 
+Token::Token() : type(Tok::None) { }
 Token::Token(const Cursor& cur, Tok tok) : cursor(cur), type(tok) { }
 Token::Token(const Cursor& cur, Tok tok, const std::string& str) : cursor(cur), type(tok), identifier(str) { }
 

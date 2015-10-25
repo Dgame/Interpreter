@@ -13,12 +13,11 @@ struct Expr;
 
 class Interpreter {
 private:
-    Location _loc;
     Lexer _lex;
     std::unique_ptr<Scope> _scope;
 
-    bool accept(Tok, Token* the_tok = nullptr);
-    bool expect(Tok);
+    bool accept(Tok);
+    void expect(Tok, u32_t);
 
     void pushScope();
     void popScope();
@@ -27,14 +26,13 @@ public:
     void parse(const std::string&);
 
 private:
-    void parseVar();
-    void parseVarAssign();
+    bool parseVar();
+    bool parseVarAssign();
+    bool parsePrint();
 
-    Decl* parsePrint();
-    Expr* parseString();
-    Expr* parseArray();
-    Expr* parseNumber();
-    Expr* parseIndexOf(const VarDecl*);
+    Expr* parseArrayExpr();
+    Expr* parseNumericExpr();
+    Expr* parseIndexOfExpr(const VarDecl*);
     Expr* parseExpr();
     Expr* parseTerm();
     Expr* parseFactor();

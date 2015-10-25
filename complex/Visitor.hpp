@@ -17,6 +17,7 @@ struct FloatExpr;
 struct CharExpr;
 struct StringExpr;
 struct NegExpr;
+struct NotExpr;
 struct ParenExpr;
 struct AddExpr;
 struct SubExpr;
@@ -25,6 +26,8 @@ struct DivExpr;
 struct ModExpr;
 struct BitAndExpr;
 struct BitOrExpr;
+struct BitNotExpr;
+struct BitXorExpr;
 
 struct Visitor {
     virtual ~Visitor() { }
@@ -65,6 +68,10 @@ struct Visitor {
         assert(0);
     }
 
+    virtual void visit(const NotExpr*) {
+        assert(0);
+    }
+
     virtual void visit(const ParenExpr*) {
         assert(0);
     }
@@ -96,6 +103,14 @@ struct Visitor {
     virtual void visit(const BitOrExpr*) {
         assert(0);
     }
+
+    virtual void visit(const BitNotExpr*) {
+        assert(0);
+    }
+
+    virtual void visit(const BitXorExpr*) {
+        assert(0);
+    }
 };
 
 struct EvalVisitor : public Visitor {
@@ -109,6 +124,7 @@ struct EvalVisitor : public Visitor {
     virtual void visit(const IntExpr*);
     virtual void visit(const FloatExpr*);
     virtual void visit(const NegExpr*);
+    virtual void visit(const NotExpr*);
     virtual void visit(const ParenExpr*);
     virtual void visit(const AddExpr*);
     virtual void visit(const SubExpr*);
@@ -117,6 +133,8 @@ struct EvalVisitor : public Visitor {
     virtual void visit(const ModExpr*);
     virtual void visit(const BitAndExpr*);
     virtual void visit(const BitOrExpr*);
+    virtual void visit(const BitNotExpr*);
+    virtual void visit(const BitXorExpr*);
 };
 
 struct PrintVisitor : public Visitor {
@@ -133,6 +151,7 @@ struct PrintVisitor : public Visitor {
     virtual void visit(const CharExpr*);
     virtual void visit(const StringExpr*);
     virtual void visit(const NegExpr*);
+    virtual void visit(const NotExpr*);
     virtual void visit(const ParenExpr*);
     virtual void visit(const AddExpr*);
     virtual void visit(const SubExpr*);
@@ -141,6 +160,8 @@ struct PrintVisitor : public Visitor {
     virtual void visit(const ModExpr*);
     virtual void visit(const BitAndExpr*);
     virtual void visit(const BitOrExpr*);
+    virtual void visit(const BitNotExpr*);
+    virtual void visit(const BitXorExpr*);
 };
 
 struct OutputVisitor : public Visitor {
@@ -157,6 +178,7 @@ struct OutputVisitor : public Visitor {
     virtual void visit(const CharExpr*);
     virtual void visit(const StringExpr*);
     virtual void visit(const NegExpr*);
+    virtual void visit(const NotExpr*);
     virtual void visit(const ParenExpr*);
     virtual void visit(const AddExpr*);
     virtual void visit(const SubExpr*);
@@ -165,6 +187,8 @@ struct OutputVisitor : public Visitor {
     virtual void visit(const ModExpr*);
     virtual void visit(const BitAndExpr*);
     virtual void visit(const BitOrExpr*);
+    virtual void visit(const BitNotExpr*);
+    virtual void visit(const BitXorExpr*);
 };
 
 struct IndexVisitor : public Visitor {

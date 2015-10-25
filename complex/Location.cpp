@@ -1,7 +1,7 @@
 #include "Location.hpp"
 #include <locale>
 
-Location::Location(const char* start, const char* end) : first(start), last(end), pos(start), tracker(start) { }
+Location::Location(const char* start, const char* end) : _first(start), _last(end), _pos(start), _tracker(start) { }
 
 /*
 * Returns the current character, if any
@@ -9,15 +9,13 @@ Location::Location(const char* start, const char* end) : first(start), last(end)
 char Location::getCurrent() const {
     if (this->eof())
         return '\0';
-
-    return *(this->pos);
+    return *(_pos);
 }
 
 char Location::peek() const {
     if (this->eof())
         return '\0';
-
-    return *(this->pos + 1);
+    return *(_pos + 1);
 }
 
 /*
@@ -30,52 +28,52 @@ void Location::next() {
     if (this->getCurrent() == '\n')
         this->cursor.lineNr++;
 
-    this->pos++;
+    _pos++;
 }
 
-bool Lexer::isDigit() const {
+bool Location::isDigit() const {
     const char c = this->getCurrent();
 
-    return std::isidigt(c);
+    return std::isdigit(c);
 }
 
-bool Lexer::isSpace() const {
+bool Location::isSpace() const {
     const char c = this->getCurrent();
 
     return std::isspace(c);
 }
 
-bool Lexer::isAlpha() const {
+bool Location::isAlpha() const {
     const char c = this->getCurrent();
 
     return std::isalpha(c);
 }
 
-bool Lexer::isAlphaNumeric() const {
+bool Location::isAlphaNumeric() const {
     const char c = this->getCurrent();
 
     return std::isalnum(c);
 }
 
-bool Lexer::isNextDigit() const {
+bool Location::isNextDigit() const {
     const char c = this->peek();
 
-    return std::isidigt(c);
+    return std::isdigit(c);
 }
 
-bool Lexer::isNextSpace() const {
+bool Location::isNextSpace() const {
     const char c = this->peek();
 
     return std::isspace(c);
 }
 
-bool Lexer::isNextAlpha() const {
+bool Location::isNextAlpha() const {
     const char c = this->peek();
 
     return std::isalpha(c);
 }
 
-bool Lexer::isNextAlphaNumeric() const {
+bool Location::isNextAlphaNumeric() const {
     const char c = this->peek();
 
     return std::isalnum(c);

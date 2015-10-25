@@ -35,6 +35,11 @@ void EvalVisitor::visit(const NegExpr* ne) {
     this->value = this->value * -1;
 }
 
+void EvalVisitor::visit(const NotExpr* ne) {
+    ne->exp->accept(this);
+    this->value = !static_cast<i32_t>(this->value);
+}
+
 void EvalVisitor::visit(const ParenExpr* pe) {
     pe->exp->accept(this);
 }
@@ -123,6 +128,36 @@ void EvalVisitor::visit(const BitOrExpr* boe) {
     this->value = lhs | rhs;
 }
 
+void EvalVisitor::visit(const BitNotExpr* bne) {
+    bne->exp->accept(this);
+    const f32_t my_lhs = this->value;
+
+    const i32_t lhs = static_cast<i32_t>(my_lhs);
+
+    if (!AreSame(my_lhs, lhs)) {
+        error("Cannot use operator ~ for float");
+    }
+
+    this->value = ~lhs;
+}
+
+void EvalVisitor::visit(const BitXorExpr* bxe) {
+    bxe->lhs->accept(this);
+    const f32_t my_lhs = this->value;
+
+    bxe->rhs->accept(this);
+    const f32_t my_rhs = this->value;
+
+    const i32_t lhs = static_cast<i32_t>(my_lhs);
+    const i32_t rhs = static_cast<i32_t>(my_rhs);
+
+    if (!AreSame(my_lhs, lhs) || !AreSame(my_rhs, rhs)) {
+        error("Cannot use operator ^ for floats");
+    }
+
+    this->value = lhs ^ rhs;
+}
+
 /// Print
 PrintVisitor::PrintVisitor(std::ostream& out) : _out(out) { }
 
@@ -179,6 +214,11 @@ void PrintVisitor::visit(const NegExpr* ne) {
     ne->exp->accept(this);
 }
 
+void PrintVisitor::visit(const NotExpr* ne) {
+    _out << '!';
+    ne->exp->accept(this);
+}
+
 void PrintVisitor::visit(const ParenExpr* pe) {
     _out << '(';
     pe->exp->accept(this);
@@ -225,6 +265,17 @@ void PrintVisitor::visit(const BitOrExpr* boe) {
     boe->lhs->accept(this);
     _out << " | ";
     boe->rhs->accept(this);
+}
+
+void PrintVisitor::visit(const BitNotExpr* bne) {
+    _out << " ~ ";
+    bne->exp->accept(this);
+}
+
+void PrintVisitor::visit(const BitXorExpr* bxe) {
+    bxe->lhs->accept(this);
+    _out << " ^ ";
+    bxe->rhs->accept(this);
 }
 
 /// Output
@@ -282,6 +333,13 @@ void OutputVisitor::visit(const NegExpr* ne) {
     _out << ev.value * -1;
 }
 
+void OutputVisitor::visit(const NotExpr* ne) {
+    EvalVisitor ev;
+    ne->exp->accept(&ev);
+
+    _out << !static_cast<i32_t>(ev.value);
+}
+
 void OutputVisitor::visit(const ParenExpr* pe) {
     pe->exp->accept(this);
 }
@@ -328,6 +386,17 @@ void OutputVisitor::visit(const BitOrExpr* boe) {
     _out << ev.value;
 }
 
+void OutputVisitor::visit(const BitNotExpr* bne) {
+    EvalVisitor ev(bne);
+
+    _out << ev.value;
+}
+
+void OutputVisitor::visit(const BitXorExpr* bxe) {
+    EvalVisitor ev(bxe);
+
+    _out << ev.value;
+}
 
 /// Index
 IndexVisitor::IndexVisitor(const IndexExpr* ie, Visitor* v) : _visitor(v) {

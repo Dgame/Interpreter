@@ -19,6 +19,7 @@ struct Token {
 
     std::string identifier;
 
+    Token();
     explicit Token(const Cursor&, Tok);
     explicit Token(const Cursor&, Tok, const std::string&);
 

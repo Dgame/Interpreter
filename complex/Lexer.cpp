@@ -5,7 +5,7 @@
 #include <fstream>
 #include <sstream>
 
-Lexer::Lexer(const std::string& filename) {
+void Lexer::load(const std::string& filename) {
     std::ifstream stream(filename);
     if (stream.good()) {
         std::ostringstream contents;
@@ -78,6 +78,8 @@ bool Lexer::expect(Tok type) {
 }
 
 Token Lexer::read() {
+    _loc.track(); // track position
+
     while (!_loc.eof()) {
         switch (_loc.getCurrent()) {
             case 0:
@@ -157,7 +159,7 @@ Token Lexer::read() {
                     return Token(_loc.cursor, Tok::NotEqual);
                 }
 
-                return Token(Tok::Not);
+                return Token(_loc.cursor, Tok::Not);
             case '&':
                 _loc.next();
                 if (_loc.getCurrent() == '&') {
@@ -214,7 +216,7 @@ Token Lexer::read() {
                                 _loc.next();
                             else
                                 _loc.cursor.lineNr++;
-                        break;
+                            break;
                         default:
                             _loc.next();
                             continue;
@@ -244,7 +246,7 @@ Token Lexer::read() {
 
 Token Lexer::readIdentifier() {
     if (!_loc.isAlpha()) {
-        error("Expected identifier, not ", _loc.getCurrent(), " @ ", _loc.lineNr);
+        error("Expected identifier, not ", _loc.getCurrent(), " @ ", _loc.cursor.lineNr);
 
         return Token(_loc.cursor, Tok::None);
     }
@@ -331,9 +333,26 @@ Token Lexer::readString() {
 }
 
 Token Lexer::peek() {
-    _loc.track();
+    _loc.track(); // track position
+
     const Token tok = this->read();
-    _loc.backtrack();
+
+    _peeks.push(_loc.seek());
+
+    _loc.backtrack(); // go back
 
     return tok;
+}
+
+void Lexer::confirm() {
+    const char* pos = _peeks.top();
+    _peeks.pop();
+
+    _loc.tell(pos);
+}
+
+Token Lexer::reread() {
+    _loc.backtrack(); // go to last readed position
+
+    return this->read();
 }

@@ -112,3 +112,15 @@ BitOrExpr::BitOrExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
 void BitOrExpr::accept(Visitor* v) const {
     v->visit(this);
 }
+
+BitNotExpr::BitNotExpr(Expr* e) : UnaExpr(e) { }
+
+void BitNotExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+BitXorExpr::BitXorExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
+
+void BitXorExpr::accept(Visitor* v) const {
+    v->visit(this);
+}

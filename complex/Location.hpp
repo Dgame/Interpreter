@@ -4,31 +4,42 @@
 #include "types.hpp"
 #include "Cursor.hpp"
 
-struct Location {
+class Location {
+public:
     Cursor cursor;
 
-    const char* first = nullptr;
-    const char* last = nullptr;
-    const char* pos = nullptr;
-    const char* tracker = nullptr;
+private:
+    const char* _first = nullptr;
+    const char* _last = nullptr;
+    const char* _pos = nullptr;
+    const char* _tracker = nullptr;
 
+public:
     Location() = default;
     explicit Location(const char*, const char*);
 
     u32_t numOfReadChars() const {
-        return this->pos - this->first;
+        return _pos - _first;
     }
 
     u32_t numOfAllChars() const {
-        return this->last - this->first;
+        return _last -_first;
     }
 
     void track() {
-        this->tracker = this->pos;
+        _tracker = _pos;
     }
 
     void backtrack() {
-        this->pos = this->tracker;
+        _pos = _tracker;
+    }
+
+    const char* seek() const {
+        return _pos;
+    }
+
+    void tell(const char* pos) {
+        _pos = pos;
     }
 
     /*
@@ -46,7 +57,7 @@ struct Location {
     * True if we reached the end of file.
     */
     bool eof() const {
-        return this->pos > this->last || *this->pos == '\0';
+        return _pos > _last || *_pos == '\0';
     }
 
     bool isDigit() const;

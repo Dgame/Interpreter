@@ -1,7 +1,8 @@
-#ifndef LEXER_HP
+#ifndef LEXER_HPP
 #define LEXER_HPP
 
 #include <string>
+#include <stack>
 #include "Location.hpp"
 #include "Token.hpp"
 
@@ -9,6 +10,8 @@ class Lexer {
 private:
     Location _loc;
     std::string _buffer;
+
+    std::stack<const char*> _peeks;
 
     void skipSpaces();
     bool accept(char);
@@ -22,10 +25,12 @@ private:
     Token readString();
 
 public:
-    explicit Lexer(const std::string&);
+    void load(const std::string&);
 
     Token read();
     Token peek();
+    void confirm();
+    Token reread();
 };
 
 #endif

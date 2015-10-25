@@ -91,6 +91,18 @@ struct NegExpr : public UnaExpr {
     virtual void accept(Visitor*) const;
 };
 
+struct NotExpr : public UnaExpr {
+    explicit NotExpr(Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
+struct BitNotExpr : public UnaExpr {
+    explicit BitNotExpr(Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
 struct ParenExpr : public UnaExpr {
     explicit ParenExpr(Expr*);
 
@@ -142,6 +154,12 @@ struct BitAndExpr : public BinExpr {
 
 struct BitOrExpr : public BinExpr {
     explicit BitOrExpr(Expr*, Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
+struct BitXorExpr : public BinExpr {
+    explicit BitXorExpr(Expr*, Expr*);
 
     virtual void accept(Visitor*) const;
 };

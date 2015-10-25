@@ -4,17 +4,25 @@
 #include <fstream>
 #include <locale>
 
-bool Interpreter::accept(Tok type, Token* the_tok) {
-    const Token tok = _loc.read();
-    if (the_tok)
-        *the_tok = tok;
-    return tok.type == type;
+bool Interpreter::accept(Tok type) {
+    const Token tok = _lex.peek();
+    if (tok.type == type) {
+        _lex.confirm();
+
+        return true;
+    }
+
+    return false;
 }
 
-bool Interpreter::expect(Tok type) {
-    Token tok;
-    if (!this->accept(type, &tok)) {
-        error("Expected token ", static_cast<i32_t>(type), " @ ", tok.cursor.lineNr);
+void Interpreter::expect(Tok type, u32_t line) {
+    if (!this->accept(type)) {
+        const Token tok = _lex.reread();
+
+        const u32_t expected = static_cast<u32_t>(type);
+        const u32_t got = static_cast<u32_t>(tok.type);
+
+        error("Expected Token ", expected, ", got ", got, " @ line ", tok.cursor.lineNr, ". Called @ line ", line);
     }
 }
 
@@ -28,140 +36,155 @@ void Interpreter::popScope() {
     _scope.reset(sc);
 }
 
-void Interpreter::parse(const std::string& filename) : _lex(filename), _scope(new Scope()) {
+void Interpreter::parse(const std::string& filename) {
+    _lex.load(filename);
+    _scope = std::make_unique<Scope>();
+
     while (true) {
-        this->parseVar();
-        this->parsePrint();
+        u32_t flag = 0;
+
+        flag |= this->parseVar();
+        flag |= this->parsePrint();
+
+        // debug(flag);
+
+        if (flag == 0)
+            break;
     }
 }
 
-void Interpreter::parseVar() {
-    const Token tok1 = _lex.read();
+bool Interpreter::parseVar() {
+    const Token tok1 = _lex.peek();
 
     if (tok1.type == Tok::Mutable || tok1.type == Tok::Immutable) {
+        _lex.confirm();
+
         const Token tok2 = _lex.read();
 
         if (tok2.type != Tok::Identifier) {
-            return error("Expected valid variable name, not ", tok2.identifier, " @ ", tok2.cursor.lineNr);
+            error("Expected valid variable name, not ", tok2.identifier, " @ ", tok2.cursor.lineNr);
+
+            return false;
         }
 
-        this->expect('=');
+        this->expect(Tok::Assign, __LINE__);
 
         Expr* exp = this->parseExpr();
         if (!exp) {
-            return error("Expected valid Expression as assignment", " @ ", tok2.cursor.lineNr);
+            error("Expected valid Expression as assignment", " @ ", tok2.cursor.lineNr);
+
+            return false;
         }
-        this->expect(';');
 
-        VarDecl* vd = new VarDecl(tok.identifier, exp, tok1 == Tok::Immutable);
+        this->expect(Tok::Semicolon, __LINE__);
 
+        VarDecl* vd = new VarDecl(tok2.identifier, exp, tok1.type == Tok::Immutable);
         _scope->addVariable(vd);
-    } else {
-        this->parseVarAssign();
+
+        return true;
     }
+
+    return this->parseVarAssign();
 }
 
-void Interpreter::parseVarAssign() {
+bool Interpreter::parseVarAssign() {
     const Token tok = _lex.peek();
 
     if (tok.type == Tok::Identifier) {
-        _lex.read();
+        _lex.confirm();
 
         VarDecl* vd = _scope->findVariable(tok.identifier);
         if (!vd) {
-            return error("Cannot assign unknown variable ", tok.identifier, " @ ", _loc.cursor.lineNr);
+            error("Cannot assign unknown variable ", tok.identifier, " @ ", tok.cursor.lineNr);
+
+            return false;
         }
 
         if (vd->isConst()) {
-            error("Cannot modify const variable ", vd->getName(), " @ ", _loc.cursor.lineNr);
-        } else {
-/*
-            Expr* index = nullptr;
-            if (this->accept('[')) {
-                index = this->parseExpr();
-                this->expect(']');
-            }
-*/
-            this->expect('=');
+            error("Cannot modify const variable ", vd->getName(), " @ ", tok.cursor.lineNr);
 
-            Expr* exp = this->parseExpr();
-            if (!exp) {
-                return error("Expected valid Expression as assignment", " @ ", _loc.cursor.lineNr);
-            }
-            this->expect(';');
-/*
-            if (index) {
-                exp = new IndexAssignExpr(vd->exp.release(), index, exp);
-            }
-*/
-            vd->assign(exp);
+            return false;
         }
+/*
+        Expr* index = nullptr;
+        if (this->accept('[')) {
+            index = this->parseExpr();
+            this->expect(']');
+        }
+*/
+        this->expect(Tok::Assign, __LINE__);
+
+        Expr* exp = this->parseExpr();
+        if (!exp) {
+            error("Expected valid Expression as assignment", " @ ", tok.cursor.lineNr);
+
+            return false;
+        }
+
+        this->expect(Tok::Semicolon, __LINE__);
+/*
+        if (index) {
+            exp = new IndexAssignExpr(vd->exp.release(), index, exp);
+        }
+*/
+        vd->assign(exp);
+
+        return true;
     }
+
+    return false;
 }
 
-Decl* Interpreter::parsePrint() {
-    if (_lex.read().type == Tok::Output) {
+bool Interpreter::parsePrint() {
+    if (_lex.peek().type == Tok::Output) {
+        _lex.confirm();
+
         std::unique_ptr<PrintDecl> decl = std::make_unique<PrintDecl>();
 
         while (true) {
             Expr* exp = this->parseExpr();
             if (!exp) {
-                error("Expected valid Expression for output", " @ ", _loc.cursor.lineNr);
-
-                return nullptr;
+                error("Expected valid Expression for output");
+                break;
+            } else {
+                decl->add(exp);
             }
 
-            decl->add(exp);
-
-            if (_lex.read().type != Tok::Comma) {
+            if (_lex.peek().type != Tok::Comma) {
                 break;
             }
+
+            _lex.confirm();
         }
 
-        this->expect(';');
+        this->expect(Tok::Semicolon, __LINE__);
 
-        return decl.release();
+        decl->eval();
+
+        return true;
     }
 
-    return nullptr;
+    return false;
 }
 
-Expr* Interpreter::parseString() {
-    if (this->accept('"')) {
-        std::string str;
-        str.reserve(32);
-
-        while (!_loc.eof() && _loc.getCurrent() != '"') {
-            str += _loc.getCurrent();
-            _loc.next();
-        }
-
-        this->expect('"');
-
-        return new StringExpr(str);
-    }
-
-    return nullptr;
-}
-
-Expr* Interpreter::parseArray() {
-    if (this->accept('[')) {
+Expr* Interpreter::parseArrayExpr() {
+    if (this->accept(Tok::LeftBracket)) {
         ArrayExpr* aexp = new ArrayExpr();
 
-        while (!_loc.eof()) {
+        while (true) {
             Expr* exp = this->parseExpr();
             if (!exp) {
-                error("Expected valid Expression", " @ ", _loc.lineNr);
+                error("Expected valid Expression");
                 break;
             }
             aexp->add(exp);
 
-            if (!this->accept(',')) {
+            if (!this->accept(Tok::Comma)) {
                 break;
             }
         }
 
-        this->expect(']');
+        this->expect(Tok::RightBracket, __LINE__);
 
         return aexp;
     }
@@ -169,83 +192,98 @@ Expr* Interpreter::parseArray() {
     return nullptr;
 }
 
-Expr* Interpreter::parseNumber() {
-    const Token tok = this->readNumber();
+Expr* Interpreter::parseNumericExpr() {
+    const Token tok = _lex.peek();
 
-    if (tok.type == Tok::None) {
-        return nullptr;
+    if (tok.type == Tok::Integer) {
+        _lex.confirm();
+
+        return new IntExpr(tok.integer);
     }
 
     if (tok.type == Tok::Decimal) {
+        _lex.confirm();
+
         return new FloatExpr(tok.decimal);
     }
 
-    return new IntExpr(tok.integer);
+    return nullptr;
 }
 
-Expr* Interpreter::parseIndexOf(const VarDecl* vd) {
+Expr* Interpreter::parseIndexOfExpr(const VarDecl* vd) {
     Expr* expr = nullptr;
 
-    if (this->accept('[')) {
+    if (this->accept(Tok::LeftBracket)) {
         Expr* index = this->parseExpr();
         if (!index) {
-            error("Expected valid index Expression", " @ ", _loc.lineNr);
+            error("Expected valid index Expression");
         } else {
             expr = new IndexExpr(vd->getExpr(), index);
         }
 
-        this->expect(']');
+        this->expect(Tok::RightBracket, __LINE__);
     }
 
     return expr;
 }
 
 Expr* Interpreter::parseExpr() {
-    this->skipSpaces();
+    const Token tok = _lex.peek();
 
-    if (_loc.getCurrent() == '"')
-        return this->parseString();
-
-    if (_loc.getCurrent() == '[')
-        return this->parseArray();
+    switch (tok.type) {
+        case Tok::String:
+            _lex.confirm();
+            return new StringExpr(tok.identifier);
+        case Tok::LeftBracket:
+            return this->parseArrayExpr();
+        default: break;
+    }
 
     Expr* lhs = this->parseTerm();
     if (!lhs)
         return nullptr;
 
-    while (!_loc.eof()) {
-        if (this->accept('+')) {
+    while (true) {
+        if (this->accept(Tok::Plus)) {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
-                error("Expected factor after +", " @ ", _loc.lineNr);
+                error("Expected factor after +");
                 break;
             }
 
             lhs = new AddExpr(lhs, rhs);
-        } else if (this->accept('-')) {
+        } else if (this->accept(Tok::Minus)) {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
-                error("Expected factor after -", " @ ", _loc.lineNr);
+                error("Expected factor after -");
                 break;
             }
 
             lhs = new SubExpr(lhs, rhs);
-        } else if (this->accept('&')) {
+        } else if (this->accept(Tok::BitAnd)) {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
-                error("Expected factor after &", " @ ", _loc.lineNr);
+                error("Expected factor after &");
                 break;
             }
 
             lhs = new BitAndExpr(lhs, rhs);
-        } else if (this->accept('|')) {
+        } else if (this->accept(Tok::BitOr)) {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
-                error("Expected factor after |", " @ ", _loc.lineNr);
+                error("Expected factor after |");
                 break;
             }
 
             lhs = new BitOrExpr(lhs, rhs);
+        } else if (this->accept(Tok::BitXor)) {
+            Expr* rhs = this->parseTerm();
+            if (!rhs) {
+                error("Expected factor after |");
+                break;
+            }
+
+            lhs = new BitXorExpr(lhs, rhs);
         } else
             break;
     }
@@ -258,27 +296,27 @@ Expr* Interpreter::parseTerm() {
     if (!lhs)
         return nullptr;
 
-    while (!_loc.eof()) {
-        if (this->accept('*')) {
+    while (true) {
+        if (this->accept(Tok::Mul)) {
             Expr* rhs = this->parseFactor();
             if (!rhs) {
-                error("Expected factor after *", " @ ", _loc.lineNr);
+                error("Expected factor after *");
                 break;
             }
 
             lhs = new MulExpr(lhs, rhs);
-        } else if (this->accept('/')) {
+        } else if (this->accept(Tok::Div)) {
             Expr* rhs = this->parseFactor();
             if (!rhs) {
-                error("Expected factor after /", " @ ", _loc.lineNr);
+                error("Expected factor after /");
                 break;
             }
 
             lhs = new DivExpr(lhs, rhs);
-        } else if (this->accept('%')) {
+        } else if (this->accept(Tok::Mod)) {
             Expr* rhs = this->parseFactor();
             if (!rhs) {
-                error("Expected factor after %", " @ ", _loc.lineNr);
+                error("Expected factor after %");
                 break;
             }
 
@@ -291,51 +329,52 @@ Expr* Interpreter::parseTerm() {
 }
 
 Expr* Interpreter::parseFactor() {
-    const bool negate = this->accept('-');
+    // const bool not_before = this->accept(Tok::Not);
+    // const bool negate = this->accept(Tok::Minus);
 
-    std::string id;
-
-    Expr* expr = this->parseNumber();
+    Expr* expr = this->parseNumericExpr();
     if (!expr) {
-        if (this->accept('(')) {
+        if (this->accept(Tok::LeftParen)) {
             expr = this->parseExpr();
             expr = new ParenExpr(expr);
 
-            this->expect(')');
+            this->expect(Tok::RightParen, __LINE__);
         } else {
             expr = this->parseVariableFactor();
         }
     }
 
-    if (negate) {
-        if (!expr)
-            error("Nothing that can be negated", " @ ", _loc.lineNr);
-        else
-            return new NegExpr(expr);
-    }
+    // if (negate) {
+    //     if (!expr)
+    //         error("Nothing that can be negated");
+    //     else
+    //         return new NegExpr(expr);
+    // }
 
     return expr;
 }
 
 Expr* Interpreter::parseVariableFactor() {
-    const Token tok = this->readIdentifier();
+    const Token tok = _lex.peek();
 
     if (tok.type != Tok::Identifier) {
-        error("Expected math factor or variable name", " @ ", _loc.lineNr);
+        error("Expected math factor or variable name", " @ ", tok.cursor.lineNr);
 
         return nullptr;
     }
 
+    _lex.confirm();
+
     const VarDecl* vd = _scope->findVariable(tok.identifier);
     if (vd) {
-        if (_loc.getCurrent() == '[') {
-            return this->parseIndexOf(vd);
+        if (_lex.peek().type == Tok::LeftBracket) {
+            return this->parseIndexOfExpr(vd);
         }
 
         return new VarExpr(vd->getExpr());
     }
 
-    error("Expected variable: ", tok.identifier, " @ ", _loc.lineNr);
+    error("Expected variable: ", tok.identifier, " @ ", tok.cursor.lineNr);
 
     return nullptr;
 }
