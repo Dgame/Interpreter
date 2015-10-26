@@ -1,15 +1,15 @@
 let a = 3.14;
 var b = 42;
-print a, b;
+print a, " ", b;
 #a = 23;
 b = 23;
-print a, b;
+print a, " ", b;
 
 let c = 3;
 let d = (1 + 2);
 let e = 3 * (1 + 2);
 
-print c, d, c * d, e;
+print c, " ", d, " ", c * d, " ", e;
 print "c = ", c, " & d = ", d, " & c * d = ", c * d, " & e = ", e;
 
 let arr = [1, 2, 3];
@@ -26,3 +26,4 @@ print "arr[1] = ", arr[1], " & arr[1 + 1] = ", arr[1 + 1];
 print "arr[1 + 1] + 1 = ", arr[1 + 1] + 1;
 
 print "4 | 8 = ", 4 | 8;
+print "~4 = ", ~4, " & !4 = ", !4, " & (4 & 4) = ", (4 & 4);

@@ -188,17 +188,17 @@ u16_t Interpreter::parseUnary() {
 
         switch (tok.type) {
             case Tok::Not:
-                flags |= Unary::Not;
+                flags ^= Unary::Not;
                 _lex.confirm();
             continue;
 
             case Tok::Minus:
-                flags |= Unary::Negation;
+                flags ^= Unary::Negation;
                 _lex.confirm();
             continue;
 
             case Tok::BitNot:
-                flags |= Unary::BitNot;
+                flags ^= Unary::BitNot;
                 _lex.confirm();
             continue;
 

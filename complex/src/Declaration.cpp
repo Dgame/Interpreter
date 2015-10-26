@@ -40,8 +40,7 @@ std::ostream& PrintDecl::print(std::ostream& out) const {
 void PrintDecl::eval() const {
     for (auto& exp : _exps) {
         OutputVisitor(exp.get(), std::cout);
-
-        std::cout << ' ';
+        // std::cout << ' ';
     }
 
     std::cout << std::endl;
