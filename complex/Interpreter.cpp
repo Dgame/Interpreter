@@ -4,6 +4,14 @@
 #include <fstream>
 #include <locale>
 
+namespace Unary {
+    enum {
+        Not = 0x1, // !
+        Neg = 0x2, // -
+        BitNot = 0x4 // ~
+    };
+}
+
 bool Interpreter::accept(Tok type) {
     const Token tok = _lex.peek();
     if (tok.type == type) {
@@ -165,6 +173,37 @@ bool Interpreter::parsePrint() {
     }
 
     return false;
+}
+
+u16_t parseUnary() {
+    u16_t flags = 0;
+
+    while (true) {
+        const Token tok = _lex.peek();
+
+        switch (tok.type) {
+            case Tok::Not:
+                flags |= Unary::Not;
+                _lex.confirm();
+            continue;
+
+            case Tok::Neg:
+                flags |= Unary::Neg;
+                _lex.confirm();
+            continue;
+
+            case Tok::BitNot:
+                flags |= Unary::BitNot;
+                _lex.confirm();
+            continue;
+
+            default: break;
+        }
+
+        break;
+    }
+
+    return flags;
 }
 
 Expr* Interpreter::parseArrayExpr() {
@@ -329,8 +368,7 @@ Expr* Interpreter::parseTerm() {
 }
 
 Expr* Interpreter::parseFactor() {
-    // const bool not_before = this->accept(Tok::Not);
-    // const bool negate = this->accept(Tok::Minus);
+    const u16_t flags = this->parseUnary();
 
     Expr* expr = this->parseNumericExpr();
     if (!expr) {
@@ -344,12 +382,18 @@ Expr* Interpreter::parseFactor() {
         }
     }
 
-    // if (negate) {
-    //     if (!expr)
-    //         error("Nothing that can be negated");
-    //     else
-    //         return new NegExpr(expr);
-    // }
+    if (!expr) {
+        error("Expected factor");
+
+        return nullptr;
+    }
+
+    if (flags & Unary::Not)
+        expr = new NotExpr(expr);
+    if (flags & Unary::Neg)
+        expr = new NegExpr(expr);
+    if (flags & Unary::BitNot)
+        expr = new BitNotExpr(expr);
 
     return expr;
 }

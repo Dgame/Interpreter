@@ -30,6 +30,8 @@ private:
     bool parseVarAssign();
     bool parsePrint();
 
+    u16_t parseUnary();
+
     Expr* parseArrayExpr();
     Expr* parseNumericExpr();
     Expr* parseIndexOfExpr(const VarDecl*);
