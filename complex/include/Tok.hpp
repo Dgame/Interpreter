@@ -44,7 +44,4 @@ enum class Tok {
     LowerEqual,
 };
 
-const std::string& AsString(Tok);
-Tok IdentifyKeyword(const std::string&);
-
 #endif

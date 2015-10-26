@@ -24,6 +24,9 @@ struct Token {
     explicit Token(const Cursor&, Tok, const std::string&);
 
     static Token Identify(const Cursor&, const std::string&);
+
+    static const std::string& AsString(Tok);
+    static Tok IsKeyword(const std::string&);
 };
 
 #endif

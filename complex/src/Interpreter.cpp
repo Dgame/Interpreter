@@ -27,10 +27,15 @@ void Interpreter::expect(Tok type, u32_t line) {
     if (!this->accept(type)) {
         const Token tok = _lex.reread();
 
-        const u32_t expected = static_cast<u32_t>(type);
-        const u32_t got = static_cast<u32_t>(tok.type);
-
-        error("Expected Token ", expected, ", got ", got, " @ line ", tok.cursor.lineNr, ". Called @ line ", line);
+        error("Expected Token ",
+              Token::AsString(type),
+              ", got ",
+              Token::AsString(tok.type),
+              " @ line ",
+              tok.cursor.lineNr,
+              ". Called @ line ",
+              line
+            );
     }
 }
 
