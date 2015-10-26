@@ -7,7 +7,7 @@
 namespace Unary {
     enum {
         Not = 0x1, // !
-        Neg = 0x2, // -
+        Negation = 0x2, // -
         BitNot = 0x4 // ~
     };
 }
@@ -175,7 +175,7 @@ bool Interpreter::parsePrint() {
     return false;
 }
 
-u16_t parseUnary() {
+u16_t Interpreter::parseUnary() {
     u16_t flags = 0;
 
     while (true) {
@@ -187,8 +187,8 @@ u16_t parseUnary() {
                 _lex.confirm();
             continue;
 
-            case Tok::Neg:
-                flags |= Unary::Neg;
+            case Tok::Minus:
+                flags |= Unary::Negation;
                 _lex.confirm();
             continue;
 
@@ -383,15 +383,15 @@ Expr* Interpreter::parseFactor() {
     }
 
     if (!expr) {
-        error("Expected factor");
+        error("Expected a factor Expression");
 
         return nullptr;
     }
 
     if (flags & Unary::Not)
         expr = new NotExpr(expr);
-    if (flags & Unary::Neg)
-        expr = new NegExpr(expr);
+    if (flags & Unary::Negation)
+        expr = new NegationExpr(expr);
     if (flags & Unary::BitNot)
         expr = new BitNotExpr(expr);
 

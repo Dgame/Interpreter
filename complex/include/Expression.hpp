@@ -85,8 +85,8 @@ struct UnaExpr : public Expr {
     explicit UnaExpr(Expr*);
 };
 
-struct NegExpr : public UnaExpr {
-    explicit NegExpr(Expr*);
+struct NegationExpr : public UnaExpr {
+    explicit NegationExpr(Expr*);
 
     virtual void accept(Visitor*) const;
 };

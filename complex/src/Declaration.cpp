@@ -1,6 +1,7 @@
 #include "Declaration.hpp"
 #include "Expression.hpp"
-#include "Visitor.hpp"
+#include "Visitor/PrintVisitor.hpp"
+#include "Visitor/OutputVisitor.hpp"
 
 VarDecl::VarDecl(const std::string& name, Expr* exp, bool constant) : _name(name), _exp(exp), _isConst(constant) { }
 

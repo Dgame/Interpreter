@@ -57,9 +57,15 @@ void StringExpr::accept(Visitor* v) const {
 
 UnaExpr::UnaExpr(Expr* e) : exp(e) { }
 
-NegExpr::NegExpr(Expr* e) : UnaExpr(e) { }
+NegationExpr::NegationExpr(Expr* e) : UnaExpr(e) { }
 
-void NegExpr::accept(Visitor* v) const {
+void NegationExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+NotExpr::NotExpr(Expr* e) : UnaExpr(e) { }
+
+void NotExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 
