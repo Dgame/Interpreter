@@ -128,22 +128,22 @@ Token Lexer::read() {
                 return Token(_loc.cursor, Tok::Mod);
             case '(':
                 _loc.next();
-                return Token(_loc.cursor, Tok::LeftParen);
+                return Token(_loc.cursor, Tok::OpenParen);
             case ')':
                 _loc.next();
-                return Token(_loc.cursor, Tok::RightParen);
+                return Token(_loc.cursor, Tok::CloseParen);
             case '[':
                 _loc.next();
-                return Token(_loc.cursor, Tok::LeftBracket);
+                return Token(_loc.cursor, Tok::OpenBracket);
             case ']':
                 _loc.next();
-                return Token(_loc.cursor, Tok::RightBracket);
+                return Token(_loc.cursor, Tok::CloseBracket);
             case '{':
                 _loc.next();
-                return Token(_loc.cursor, Tok::LeftCurly);
+                return Token(_loc.cursor, Tok::OpenCurly);
             case '}':
                 _loc.next();
-                return Token(_loc.cursor, Tok::RightCurly);
+                return Token(_loc.cursor, Tok::CloseCurly);
             case ',':
                 _loc.next();
                 return Token(_loc.cursor, Tok::Comma);

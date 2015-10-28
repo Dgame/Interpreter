@@ -114,12 +114,12 @@ bool Interpreter::parseVarAssign() {
         bool hasIndex = false;
         Expr* index = nullptr;
 
-        if (this->accept(Tok::LeftBracket)) {
+        if (this->accept(Tok::OpenBracket)) {
             hasIndex = true;
 
-            if (_lex.peek().type != Tok::RightBracket) {
+            if (_lex.peek().type != Tok::CloseBracket) {
                 index = this->parseExpr();
-                this->expect(Tok::RightBracket);
+                this->expect(Tok::CloseBracket);
             } else
                 _lex.confirm();
         }
@@ -182,7 +182,7 @@ bool Interpreter::parsePrint() {
 }
 
 Expr* Interpreter::parseArrayExpr() {
-    if (this->accept(Tok::LeftBracket)) {
+    if (this->accept(Tok::OpenBracket)) {
         ArrayExpr* aexp = new ArrayExpr();
 
         while (true) {
@@ -198,7 +198,7 @@ Expr* Interpreter::parseArrayExpr() {
             }
         }
 
-        this->expect(Tok::RightBracket, __LINE__);
+        this->expect(Tok::CloseBracket, __LINE__);
 
         return aexp;
     }
@@ -227,7 +227,7 @@ Expr* Interpreter::parseNumericExpr() {
 Expr* Interpreter::parseIndexOfExpr(const VarDecl* vd) {
     Expr* expr = nullptr;
 
-    if (this->accept(Tok::LeftBracket)) {
+    if (this->accept(Tok::OpenBracket)) {
         Expr* index = this->parseExpr();
         if (!index) {
             error("Expected valid index Expression");
@@ -235,7 +235,7 @@ Expr* Interpreter::parseIndexOfExpr(const VarDecl* vd) {
             expr = new IndexExpr(vd, index);
         }
 
-        this->expect(Tok::RightBracket, __LINE__);
+        this->expect(Tok::CloseBracket, __LINE__);
     }
 
     return expr;
@@ -248,7 +248,7 @@ Expr* Interpreter::parseExpr() {
         case Tok::String:
             _lex.confirm();
             return new StringExpr(tok.identifier);
-        case Tok::LeftBracket:
+        case Tok::OpenBracket:
             return this->parseArrayExpr();
         default: break;
     }
@@ -363,11 +363,11 @@ Expr* Interpreter::parseFactor() {
 
     Expr* expr = this->parseNumericExpr();
     if (!expr) {
-        if (this->accept(Tok::LeftParen)) {
+        if (this->accept(Tok::OpenParen)) {
             expr = this->parseExpr();
             expr = new ParenExpr(expr);
 
-            this->expect(Tok::RightParen, __LINE__);
+            this->expect(Tok::CloseParen, __LINE__);
         } else {
             expr = this->parseVariableFactor();
         }
@@ -410,7 +410,7 @@ Expr* Interpreter::parseVariableFactor() {
 
     const VarDecl* vd = _scope->findVariable(tok.identifier);
     if (vd) {
-        if (_lex.peek().type == Tok::LeftBracket) {
+        if (_lex.peek().type == Tok::OpenBracket) {
             return this->parseIndexOfExpr(vd);
         }
 

@@ -71,22 +71,22 @@ int main() {
                 case Tok::Mod:
                     std::cout << " % " << std::endl;
                     continue;
-                case Tok::LeftParen:
+                case Tok::OpenParen:
                     std::cout << " ( " << std::endl;
                     continue;
-                case Tok::RightParen:
+                case Tok::CloseParen:
                     std::cout << " ) " << std::endl;
                     continue;
-                case Tok::LeftBracket:
+                case Tok::OpenBracket:
                     std::cout << " [ " << std::endl;
                     continue;
-                case Tok::RightBracket:
+                case Tok::CloseBracket:
                     std::cout << " ] " << std::endl;
                     continue;
-                case Tok::LeftCurly:
+                case Tok::OpenCurly:
                     std::cout << " { " << std::endl;
                     continue;
-                case Tok::RightCurly:
+                case Tok::CloseCurly:
                     std::cout << " } " << std::endl;
                     continue;
                 case Tok::Comma:
