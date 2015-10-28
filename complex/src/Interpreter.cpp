@@ -262,7 +262,7 @@ Expr* Interpreter::parseIndexOfExpr(const VarDecl* vd) {
         if (!index) {
             error("Expected valid index Expression");
         } else {
-            expr = new IndexExpr(vd->getExpr(), index);
+            expr = new IndexExpr(vd, index);
         }
 
         this->expect(Tok::RightBracket, __LINE__);
@@ -420,7 +420,7 @@ Expr* Interpreter::parseVariableFactor() {
             return this->parseIndexOfExpr(vd);
         }
 
-        return new VarExpr(vd->getExpr());
+        return new VarExpr(vd);
     }
 
     error("Expected variable: ", tok.identifier, " @ ", tok.cursor.lineNr);

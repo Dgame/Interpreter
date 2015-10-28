@@ -22,10 +22,12 @@ struct NullExpr : public Expr {
     virtual void accept(Visitor*) const;
 };
 
-struct VarExpr : public Expr {
-    const Expr* exp;
+struct VarDecl;
 
-    explicit VarExpr(const Expr*);
+struct VarExpr : public Expr {
+    const std::shared_ptr<Expr> exp;
+
+    explicit VarExpr(const VarDecl*);
 
     virtual void accept(Visitor*) const;
 };
@@ -38,11 +40,10 @@ struct ArrayExpr : public Expr {
     virtual void accept(Visitor*) const;
 };
 
-struct IndexExpr : public Expr {
-    const Expr* exp;
+struct IndexExpr : public VarExpr {
     std::unique_ptr<Expr> index;
 
-    explicit IndexExpr(const Expr*, Expr*);
+    explicit IndexExpr(const VarDecl*, Expr*);
 
     virtual void accept(Visitor*) const;
 };

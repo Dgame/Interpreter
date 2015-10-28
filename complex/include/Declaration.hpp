@@ -21,14 +21,16 @@ struct Expr;
 
 class VarDecl : public Decl {
 private:
-    std::string _name;
-    std::unique_ptr<Expr> _exp;
     bool _isConst = false;
+    std::string _name;
+    std::shared_ptr<Expr> _exp;
 
 public:
     explicit VarDecl(const std::string&, Expr*, bool);
 
-    const Expr* getExpr() const;
+    const std::shared_ptr<Expr>& getExpr() const {
+        return _exp;
+    }
 
     const std::string& getName() const {
         return _name;

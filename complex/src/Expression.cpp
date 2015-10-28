@@ -1,11 +1,12 @@
 #include "Expression.hpp"
 #include "Visitor.hpp"
+#include "Declaration.hpp"
 
 void NullExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 
-VarExpr::VarExpr(const Expr* e) : exp(e) { }
+VarExpr::VarExpr(const VarDecl* vd) : exp(vd->getExpr()) { }
 
 void VarExpr::accept(Visitor* v) const {
     v->visit(this);
@@ -19,7 +20,7 @@ void ArrayExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 
-IndexExpr::IndexExpr(const Expr* e, Expr* i) : exp(e), index(i) { }
+IndexExpr::IndexExpr(const VarDecl* vd, Expr* i) : VarExpr(vd), index(i) { }
 
 void IndexExpr::accept(Visitor* v) const {
     v->visit(this);

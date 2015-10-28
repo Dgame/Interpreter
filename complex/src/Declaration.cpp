@@ -3,11 +3,7 @@
 #include "Visitor/PrintVisitor.hpp"
 #include "Visitor/OutputVisitor.hpp"
 
-VarDecl::VarDecl(const std::string& name, Expr* exp, bool constant) : _name(name), _exp(exp), _isConst(constant) { }
-
-const Expr* VarDecl::getExpr() const {
-    return _exp.get();
-}
+VarDecl::VarDecl(const std::string& name, Expr* exp, bool constant) : _isConst(constant), _name(name), _exp(exp) { }
 
 void VarDecl::assign(Expr* e) {
     _exp.reset(e);
