@@ -15,6 +15,7 @@ struct OutputVisitor : public Visitor {
     virtual void visit(const IndexExpr*);
     virtual void visit(const IntExpr*);
     virtual void visit(const FloatExpr*);
+    virtual void visit(const BoolExpr*);
     virtual void visit(const CharExpr*);
     virtual void visit(const StringExpr*);
     virtual void visit(const NegationExpr*);

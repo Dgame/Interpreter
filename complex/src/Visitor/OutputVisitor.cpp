@@ -43,6 +43,10 @@ void OutputVisitor::visit(const FloatExpr* fe) {
     _out << fe->value;
 }
 
+void OutputVisitor::visit(const BoolExpr* be) {
+    _out << (be->value ? "true" : "false");
+}
+
 void OutputVisitor::visit(const CharExpr* ce) {
     _out << ce->value;
 }

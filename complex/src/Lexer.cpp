@@ -100,18 +100,30 @@ Token Lexer::read() {
                 _loc.next();
                 continue;
             case '+':
+                if (_loc.peek() == '+')
+                    error("Increment (++) is not supported");
+
                 _loc.next();
+
                 return Token(_loc.cursor, Tok::Plus);
             case '-':
+                if (_loc.peek() == '-')
+                    error("Decrement (--) is not supported");
                 _loc.next();
                 return Token(_loc.cursor, Tok::Minus);
             case '*':
+                if (_loc.peek() == '*')
+                    error("Pow (**) is not supported");
                 _loc.next();
                 return Token(_loc.cursor, Tok::Mul);
             case '/':
+                if (_loc.peek() == '*')
+                    error("C-comments (//) are not supported");
                 _loc.next();
                 return Token(_loc.cursor, Tok::Div);
             case '%':
+                if (_loc.peek() == '%')
+                    error("%% is not supported");
                 _loc.next();
                 return Token(_loc.cursor, Tok::Mod);
             case '(':
@@ -145,13 +157,31 @@ Token Lexer::read() {
                 _loc.next();
                 return Token(_loc.cursor, Tok::Semicolon);
             case '=':
+            {
                 _loc.next();
-                if (_loc.getCurrent() == '=') {
+
+                const char c = _loc.getCurrent();
+                switch (c) {
+                    case '+':
+                    case '-':
+                    case '*':
+                    case '/':
+                    case '%':
+                    case '&':
+                    case '|':
+                    case '^':
+                        error("operation ", c, "= is not supported.");
+                        break;
+                    default: break;
+                }
+
+                if (c == '=') {
                     _loc.next();
                     return Token(_loc.cursor, Tok::Equal);
                 }
 
                 return Token(_loc.cursor, Tok::Assign);
+            }
             case '!':
                 _loc.next();
                 if (_loc.getCurrent() == '=') {

@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <memory>
+#include <vector>
 #include <string>
 
 #include "Declaration.hpp"
@@ -29,8 +30,6 @@ private:
     bool parseVar();
     bool parseVarAssign();
     bool parsePrint();
-
-    u16_t parseUnary();
 
     Expr* parseArrayExpr();
     Expr* parseNumericExpr();

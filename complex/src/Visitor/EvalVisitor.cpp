@@ -28,6 +28,10 @@ void EvalVisitor::visit(const FloatExpr* fe) {
     this->value = fe->value;
 }
 
+void EvalVisitor::visit(const BoolExpr* be) {
+    this->value = static_cast<i32_t>(be->value);
+}
+
 void EvalVisitor::visit(const NegationExpr* ne) {
     ne->exp->accept(this);
     this->value = this->value * -1;

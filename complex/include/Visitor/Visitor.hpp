@@ -10,6 +10,7 @@ struct ArrayExpr;
 struct IndexExpr;
 struct IntExpr;
 struct FloatExpr;
+struct BoolExpr;
 struct CharExpr;
 struct StringExpr;
 struct NegationExpr;
@@ -49,6 +50,10 @@ struct Visitor {
     }
 
     virtual void visit(const FloatExpr*) {
+        assert(0);
+    }
+
+    virtual void visit(const BoolExpr*) {
         assert(0);
     }
 

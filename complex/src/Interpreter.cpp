@@ -4,14 +4,6 @@
 #include <fstream>
 #include <locale>
 
-namespace Unary {
-    enum {
-        Not = 0x1, // !
-        Negation = 0x2, // -
-        BitNot = 0x4 // ~
-    };
-}
-
 bool Interpreter::accept(Tok type) {
     const Token tok = _lex.peek();
     if (tok.type == type) {
@@ -119,10 +111,17 @@ bool Interpreter::parseVarAssign() {
             return false;
         }
 /*
+        bool hasIndex = false;
         Expr* index = nullptr;
-        if (this->accept('[')) {
-            index = this->parseExpr();
-            this->expect(']');
+
+        if (this->accept(Tok::LeftBracket)) {
+            hasIndex = true;
+
+            if (_lex.peek().type != Tok::RightBracket) {
+                index = this->parseExpr();
+                this->expect(Tok::RightBracket);
+            } else
+                _lex.confirm();
         }
 */
         this->expect(Tok::Assign, __LINE__);
@@ -136,11 +135,13 @@ bool Interpreter::parseVarAssign() {
 
         this->expect(Tok::Semicolon, __LINE__);
 /*
-        if (index) {
-            exp = new IndexAssignExpr(vd->exp.release(), index, exp);
-        }
-*/
-        vd->assign(exp);
+        if (hasIndex) {
+            if (index)
+                vd->assignAt(index, exp);
+            else
+                vd->append(exp);
+        } else*/
+            vd->assign(exp);
 
         return true;
     }
@@ -178,37 +179,6 @@ bool Interpreter::parsePrint() {
     }
 
     return false;
-}
-
-u16_t Interpreter::parseUnary() {
-    u16_t flags = 0;
-
-    while (true) {
-        const Token tok = _lex.peek();
-
-        switch (tok.type) {
-            case Tok::Not:
-                flags ^= Unary::Not;
-                _lex.confirm();
-            continue;
-
-            case Tok::Minus:
-                flags ^= Unary::Negation;
-                _lex.confirm();
-            continue;
-
-            case Tok::BitNot:
-                flags ^= Unary::BitNot;
-                _lex.confirm();
-            continue;
-
-            default: break;
-        }
-
-        break;
-    }
-
-    return flags;
 }
 
 Expr* Interpreter::parseArrayExpr() {
@@ -373,7 +343,23 @@ Expr* Interpreter::parseTerm() {
 }
 
 Expr* Interpreter::parseFactor() {
-    const u16_t flags = this->parseUnary();
+    std::vector<Tok> unaries;
+    while (true) {
+        Token tok = _lex.peek();
+
+        switch (tok.type) {
+            case Tok::Not:
+            case Tok::Minus:
+            case Tok::BitNot:
+                unaries.push_back(tok.type);
+                _lex.confirm();
+            continue;
+
+            default: break;
+        }
+
+        break;
+    }
 
     Expr* expr = this->parseNumericExpr();
     if (!expr) {
@@ -393,12 +379,20 @@ Expr* Interpreter::parseFactor() {
         return nullptr;
     }
 
-    if (flags & Unary::Not)
-        expr = new NotExpr(expr);
-    if (flags & Unary::Negation)
-        expr = new NegationExpr(expr);
-    if (flags & Unary::BitNot)
-        expr = new BitNotExpr(expr);
+    for (const Tok tok : unaries) {
+        switch (tok) {
+            case Tok::Not:
+                expr = new NotExpr(expr);
+                break;
+            case Tok::Minus:
+                expr = new NegationExpr(expr);
+                break;
+            case Tok::BitNot:
+                expr = new BitNotExpr(expr);
+                break;
+            default: error("Unexpected unary");
+        }
+    }
 
     return expr;
 }

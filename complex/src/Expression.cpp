@@ -26,12 +26,6 @@ void IndexExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 
-// IndexAssignExpr::IndexAssignExpr(Expr* e, Expr* i, Expr* a) : exp(e), index(i), assign(a) { }
-
-// void IndexAssignExpr::accept(Visitor* v) const {
-//     v->visit(this);
-// }
-
 IntExpr::IntExpr(i32_t val) : value(val) { }
 
 void IntExpr::accept(Visitor* v) const {
@@ -41,6 +35,12 @@ void IntExpr::accept(Visitor* v) const {
 FloatExpr::FloatExpr(f32_t val) : value(val) { }
 
 void FloatExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+BoolExpr::BoolExpr(bool val) : value(val) { }
+
+void BoolExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 

@@ -64,6 +64,14 @@ struct FloatExpr : public Expr {
     virtual void accept(Visitor*) const;
 };
 
+struct BoolExpr : public Expr {
+    bool value = false;
+
+    explicit BoolExpr(bool);
+
+    virtual void accept(Visitor*) const;
+};
+
 struct CharExpr : public Expr {
     char value = 0;
 
