@@ -41,6 +41,8 @@ public:
     }
 
     void assign(Expr*);
+    void assignAt(Expr*, Expr*);
+    void append(Expr*);
 
     virtual std::ostream& print(std::ostream&) const;
 

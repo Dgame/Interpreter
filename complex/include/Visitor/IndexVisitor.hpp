@@ -10,6 +10,10 @@ struct IndexVisitor : public Visitor {
 
     explicit IndexVisitor(const IndexExpr*, Visitor*);
 
+    virtual void fail() {
+        throw "Invalid Index Expression";
+    }
+
     virtual void visit(const ArrayExpr*);
     virtual void visit(const StringExpr*);
 };

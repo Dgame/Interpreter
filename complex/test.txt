@@ -32,3 +32,17 @@ var z = 4 ^ 4;
 print "z = ", z;
 z = z ^ 4;
 print "z = ", z;
+
+var eme = [1, 2, 3];
+let ia = eme[1];
+eme = [4, 5, 6];
+
+print "ia = ", ia, " : ", eme;
+
+eme[1] = 42;
+
+print "ia = ", ia, " : ", eme;
+
+eme[] = 23;
+
+print "ia = ", ia, " : ", eme;

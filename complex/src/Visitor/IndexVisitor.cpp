@@ -11,7 +11,6 @@ IndexVisitor::IndexVisitor(const IndexExpr* ie, Visitor* v) : _visitor(v) {
 
     this->index = static_cast<u32_t>(ev.value);
 
-
     ie->exp->accept(this);
 }
 

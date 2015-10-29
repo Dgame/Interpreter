@@ -67,7 +67,14 @@ bool Interpreter::parseVar() {
         const Token tok2 = _lex.read();
 
         if (tok2.type != Tok::Identifier) {
-            error("Expected valid variable name, not ", tok2.identifier, " @ ", tok2.cursor.lineNr);
+            error("Expected valid variable name, not '", tok2.identifier, "' @ ", tok2.cursor.lineNr);
+
+            return false;
+        }
+
+        const VarDecl* vde = _scope->findVariable(tok2.identifier);
+        if (vde) {
+            error("A variable with name '", vde->getName(), "' already exists");
 
             return false;
         }
@@ -110,7 +117,7 @@ bool Interpreter::parseVarAssign() {
 
             return false;
         }
-/*
+
         bool hasIndex = false;
         Expr* index = nullptr;
 
@@ -119,11 +126,11 @@ bool Interpreter::parseVarAssign() {
 
             if (_lex.peek().type != Tok::CloseBracket) {
                 index = this->parseExpr();
-                this->expect(Tok::CloseBracket);
+                this->expect(Tok::CloseBracket, __LINE__);
             } else
                 _lex.confirm();
         }
-*/
+
         this->expect(Tok::Assign, __LINE__);
 
         Expr* exp = this->parseExpr();
@@ -134,13 +141,13 @@ bool Interpreter::parseVarAssign() {
         }
 
         this->expect(Tok::Semicolon, __LINE__);
-/*
+
         if (hasIndex) {
             if (index)
                 vd->assignAt(index, exp);
             else
                 vd->append(exp);
-        } else*/
+        } else
             vd->assign(exp);
 
         return true;
