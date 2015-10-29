@@ -192,7 +192,7 @@ Expr* Interpreter::parseArrayExpr() {
     if (this->accept(Tok::OpenBracket)) {
         ArrayExpr* aexp = new ArrayExpr();
 
-        while (true) {
+        while (_lex.peek().type != Tok::CloseBracket) {
             Expr* exp = this->parseExpr();
             if (!exp) {
                 error("Expected valid Expression");

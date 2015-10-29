@@ -46,3 +46,8 @@ print "ia = ", ia, " : ", eme;
 eme[] = 23;
 
 print "ia = ", ia, " : ", eme;
+
+var abc = [];
+abc[] = "xyz";
+
+print abc[0];
