@@ -1,0 +1,52 @@
+//
+// Created by Randy on 31.10.2015.
+//
+
+#ifndef INTERPRETER_INTERPRETER_HPP
+#define INTERPRETER_INTERPRETER_HPP
+
+#ifndef INTERPRETER_HPP
+#define INTERPRETER_HPP
+
+#include <ostream>
+#include <memory>
+#include <vector>
+#include <string>
+
+#include "Declaration.hpp"
+#include "Scope.hpp"
+#include "Lexer.hpp"
+
+struct Expr;
+
+class Interpreter {
+private:
+    Lexer _lex;
+    std::unique_ptr<Scope> _scope;
+
+    bool accept(Tok);
+    void expect(Tok, u32_t);
+
+    void pushScope();
+    void popScope();
+
+public:
+    void parse(const std::string&);
+
+private:
+    bool parseVar();
+    bool parseVarAssign();
+    bool parsePrint();
+
+    Expr* parseArrayExpr();
+    Expr* parseNumericExpr();
+    Expr* parseIndexOfExpr(const VarDecl*);
+    Expr* parseExpr();
+    Expr* parseTerm();
+    Expr* parseFactor();
+    Expr* parseVariableFactor();
+};
+
+#endif
+
+#endif //INTERPRETER_INTERPRETER_HPP
