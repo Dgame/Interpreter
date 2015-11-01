@@ -6,7 +6,7 @@ int main() {
     Interpreter ip;
 
     try {
-        ip.parse("E:/CLion Projects/Interpreter/syntax/test.rs");
+        ip.parse("C:/Users/Randy/Documents/GitHub/Interpreter/syntax/test.rs");
     } catch (const char* msg) {
         std::cerr << msg << std::endl;
     } catch (const std::string& str) {

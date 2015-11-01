@@ -165,7 +165,7 @@ bool Interpreter::parsePrint() {
     if (_lex.peek().type == Tok::Output) {
         _lex.confirm();
 
-        std::unique_ptr<PrintDecl> decl = std::make_unique<PrintDecl>();
+        std::unique_ptr<PrintDecl> decl = std::make_unique<PrintDecl>(std::cout);
 
         while (true) {
             Expr* exp = this->parseExpr();
