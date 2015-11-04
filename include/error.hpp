@@ -19,12 +19,12 @@ void println(std::ostream& stream, const T& first, Args&& ...args) {
 }
 
 template <typename... Args>
-void debug(Args&& ...args) {
+void debug(Args ...args) {
     println(std::cout, args...);
 }
 
 template <typename... Args>
-void error(Args&& ...args) {
+void error(Args ...args) {
     std::cerr << "Error: ";
     println(std::cerr, args...);
 
@@ -32,9 +32,16 @@ void error(Args&& ...args) {
 }
 
 template <typename... Args>
-void warning(Args&& ...args) {
+void warning(Args ...args) {
     std::cerr << "Warning: ";
     println(std::cerr, args...);
+}
+
+template <typename... Args>
+void ensure(bool cond, Args... args) {
+    if (!cond) {
+        error(args...);
+    }
 }
 
 #endif //INTERPRETER_ERROR_HPP

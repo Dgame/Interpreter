@@ -48,6 +48,8 @@ eme[] = 23;
 print "ia = ", ia, " : ", eme;
 
 var abc = [];
-abc[] = "xyz";
+abc[] = "x";
+abc[] = "y";
+abc[] = "z";
 
-print abc[0];
+print abc[0], ":", abc;

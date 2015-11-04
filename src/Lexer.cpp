@@ -367,7 +367,6 @@ Token Lexer::peek() {
     const Token tok = this->read();
 
     _peeks.push(_loc.seek());
-
     _loc.backtrack(); // go back
 
     return tok;

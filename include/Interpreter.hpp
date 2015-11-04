@@ -21,7 +21,7 @@ struct Expr;
 
 class Interpreter {
 private:
-    Lexer _lex;
+    Lexer                  _lex;
     std::unique_ptr<Scope> _scope;
 
     bool accept(Tok);
@@ -31,12 +31,14 @@ private:
     void popScope();
 
 public:
-    void parse(const std::string&);
+    explicit Interpreter(const std::string&);
+
+    void parse();
 
 private:
-    bool parseVar();
-    bool parseVarAssign();
-    bool parsePrint();
+    void parseVariable(const Token&);
+    void parseAssignment(const Token&);
+    void parsePrint(const Token&);
 
     Expr* parseArrayExpr();
     Expr* parseNumericExpr();

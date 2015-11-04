@@ -32,7 +32,7 @@ void Interpreter::expect(Tok type, u32_t line) {
               tok.cursor.lineNr,
               ". Called @ line ",
               line
-            );
+        );
     }
 }
 
@@ -46,151 +46,112 @@ void Interpreter::popScope() {
     _scope.reset(sc);
 }
 
-void Interpreter::parse(const std::string& filename) {
+Interpreter::Interpreter(const std::string& filename) : _scope(new Scope) {
     _lex.load(filename);
-    _scope = std::make_unique<Scope>();
+}
+
+void Interpreter::parse() {
+    Tok type = Tok::None;
 
     while (true) {
-        u32_t flag = 0;
+        const Token tok = _lex.peek();
+        type = tok.type;
 
-        flag |= this->parseVar();
-        flag |= this->parsePrint();
-
-        // debug(flag);
-
-        if (flag == 0)
-            break;
-    }
-}
-
-bool Interpreter::parseVar() {
-    const Token tok1 = _lex.peek();
-
-    if (tok1.type == Tok::Mutable || tok1.type == Tok::Immutable) {
-        _lex.confirm();
-
-        const Token tok2 = _lex.read();
-
-        if (tok2.type != Tok::Identifier) {
-            error("Expected valid variable name, not '", tok2.identifier, "' @ ", tok2.cursor.lineNr);
-
-            return false;
+        switch (type) {
+            case Tok::Mutable:
+            case Tok::Immutable:
+                this->parseVariable(tok);
+                continue;
+            case Tok::Identifier:
+                this->parseAssignment(tok);
+                continue;
+            case Tok::Output:
+                this->parsePrint(tok);
+                continue;
+            default:
+                break;
         }
 
-        const VarDecl* vde = _scope->findVariable(tok2.identifier);
-        if (vde) {
-            error("A variable with name '", vde->getName(), "' already exists");
-
-            return false;
-        }
-
-        this->expect(Tok::Assign, __LINE__);
-
-        Expr* exp = this->parseExpr();
-        if (!exp) {
-            error("Expected valid Expression as assignment", " @ ", tok2.cursor.lineNr);
-
-            return false;
-        }
-
-        this->expect(Tok::Semicolon, __LINE__);
-
-        VarDecl* vd = new VarDecl(tok2.identifier, exp, tok1.type == Tok::Immutable);
-        _scope->addVariable(vd);
-
-        return true;
+        break;
     }
 
-    return this->parseVarAssign();
+    ensure(type == Tok::Eof, "Invalid end of file");
 }
 
-bool Interpreter::parseVarAssign() {
-    const Token tok = _lex.peek();
+void Interpreter::parseVariable(const Token& tok) {
+    ensure(tok.type == Tok::Mutable || tok.type == Tok::Immutable, "Expected 'var' or 'let'");
+    _lex.confirm();
 
-    if (tok.type == Tok::Identifier) {
-        _lex.confirm();
+    const Token id = _lex.peek();
+    ensure(id.type == Tok::Identifier, "Expected a valid variable name @ ", id.cursor.lineNr);
+    _lex.confirm();
 
-        VarDecl* vd = _scope->findVariable(tok.identifier);
-        if (!vd) {
-            error("Cannot assign unknown variable ", tok.identifier, " @ ", tok.cursor.lineNr);
+    VarDecl* vd = _scope->findVariable(id.identifier);
+    ensure(vd == nullptr, "A variable with name '", id.identifier, "' already exist");
 
-            return false;
-        }
+    this->expect(Tok::Assign, __LINE__);
+    Expr* exp = this->parseExpr();
+    this->expect(Tok::Semicolon, __LINE__);
 
-        if (vd->isConst()) {
-            error("Cannot modify const variable ", vd->getName(), " @ ", tok.cursor.lineNr);
+    vd = new VarDecl(id.identifier, exp, tok.type == Tok::Immutable);
+    _scope->addVariable(vd);
+}
 
-            return false;
-        }
+void Interpreter::parseAssignment(const Token& tok) {
+    ensure(tok.type == Tok::Identifier, "Expected valid identifier for assignment");
+    _lex.confirm();
 
-        bool hasIndex = false;
-        Expr* index = nullptr;
+    VarDecl* vd = _scope->findVariable(tok.identifier);
+    ensure(vd != nullptr, "Cannot assign unknown variable ", tok.identifier, " @ ", tok.cursor.lineNr);
+    ensure(!vd->isConst(), "Cannot modify const variable ", vd->getName(), " @ ", tok.cursor.lineNr);
 
-        if (this->accept(Tok::OpenBracket)) {
-            hasIndex = true;
+    bool hasIndex = false;
+    Expr* index = nullptr;
 
-            if (_lex.peek().type != Tok::CloseBracket) {
-                index = this->parseExpr();
-                this->expect(Tok::CloseBracket, __LINE__);
-            } else
-                _lex.confirm();
-        }
+    if (this->accept(Tok::OpenBracket)) {
+        hasIndex = true;
 
-        this->expect(Tok::Assign, __LINE__);
-
-        Expr* exp = this->parseExpr();
-        if (!exp) {
-            error("Expected valid Expression as assignment", " @ ", tok.cursor.lineNr);
-
-            return false;
-        }
-
-        this->expect(Tok::Semicolon, __LINE__);
-
-        if (hasIndex) {
-            if (index)
-                vd->assignAt(index, exp);
-            else
-                vd->append(exp);
+        if (_lex.peek().type != Tok::CloseBracket) {
+            index = this->parseExpr();
+            this->expect(Tok::CloseBracket, __LINE__);
         } else
-            vd->assign(exp);
-
-        return true;
+            _lex.confirm();
     }
 
-    return false;
+    this->expect(Tok::Assign, __LINE__);
+    Expr* exp = this->parseExpr();
+    this->expect(Tok::Semicolon, __LINE__);
+
+    if (hasIndex) {
+        if (index)
+            vd->assignAt(index, exp);
+        else
+            vd->append(exp);
+    } else
+        vd->assign(exp);
 }
 
-bool Interpreter::parsePrint() {
-    if (_lex.peek().type == Tok::Output) {
+void Interpreter::parsePrint(const Token& tok) {
+    ensure(tok.type == Tok::Output, "Expected 'print'");
+    _lex.confirm();
+
+    std::unique_ptr<PrintDecl> decl = std::make_unique<PrintDecl>(std::cout);
+
+    while (true) {
+        Expr* exp = this->parseExpr();
+        if (!exp) {
+            error("Expected valid Expression for output");
+            break;
+        } else
+            decl->add(exp);
+
+        if (_lex.peek().type != Tok::Comma)
+            break;
         _lex.confirm();
-
-        std::unique_ptr<PrintDecl> decl = std::make_unique<PrintDecl>(std::cout);
-
-        while (true) {
-            Expr* exp = this->parseExpr();
-            if (!exp) {
-                error("Expected valid Expression for output");
-                break;
-            } else {
-                decl->add(exp);
-            }
-
-            if (_lex.peek().type != Tok::Comma) {
-                break;
-            }
-
-            _lex.confirm();
-        }
-
-        this->expect(Tok::Semicolon, __LINE__);
-
-        decl->eval();
-
-        return true;
     }
 
-    return false;
+    this->expect(Tok::Semicolon, __LINE__);
+    decl->eval();
 }
 
 Expr* Interpreter::parseArrayExpr() {
@@ -262,7 +223,8 @@ Expr* Interpreter::parseExpr() {
             return new StringExpr(tok.identifier);
         case Tok::OpenBracket:
             return this->parseArrayExpr();
-        default: break;
+        default:
+            break;
     }
 
     Expr* lhs = this->parseTerm();
@@ -365,9 +327,10 @@ Expr* Interpreter::parseFactor() {
             case Tok::BitNot:
                 unaries.push_back(tok.type);
                 _lex.confirm();
-            continue;
+                continue;
 
-            default: break;
+            default:
+                break;
         }
 
         break;
@@ -402,7 +365,8 @@ Expr* Interpreter::parseFactor() {
             case Tok::BitNot:
                 expr = new BitNotExpr(expr);
                 break;
-            default: error("Unexpected unary");
+            default:
+                error("Unexpected unary");
         }
     }
 

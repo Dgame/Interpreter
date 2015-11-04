@@ -7,6 +7,8 @@
 
 #include <string>
 #include <stack>
+#include <array>
+
 #include "Location.hpp"
 #include "Token.hpp"
 
