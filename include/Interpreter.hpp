@@ -36,9 +36,9 @@ public:
     void parse();
 
 private:
-    void parseVariable(const Token&);
-    void parseAssignment(const Token&);
-    void parsePrint(const Token&);
+    void parseVariable();
+    void parseAssignment();
+    void parsePrint();
 
     Expr* parseArrayExpr();
     Expr* parseNumericExpr();

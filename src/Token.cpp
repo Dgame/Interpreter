@@ -50,21 +50,18 @@ namespace {
     };
 }
 
-Token::Token() : type(Tok::None) { }
-Token::Token(const Cursor& cur, Tok tok) : cursor(cur), type(tok) { }
-Token::Token(const Cursor& cur, Tok tok, const std::string& str) : cursor(cur), type(tok), identifier(str) { }
+void Token::Identify(const std::string& str, Token* tok) {
+    if (str.empty())
+        tok->type = Tok::None;
+    else {
+        const Tok type = Token::IsKeyword(str);
+        if (type != Tok::None)
+            tok->type = type;
+        else
+            tok->type = Tok::Identifier;
 
-Token Token::Identify(const Cursor& cur, const std::string& str) {
-    if (str.empty()) {
-        return Token(cur, Tok::None);
+        tok->identifier = str;
     }
-
-    const Tok tok = Token::IsKeyword(str);
-    if (tok != Tok::None) {
-        return Token(cur, tok, str);
-    }
-
-    return Token(cur, Tok::Identifier, str);
 }
 
 const std::string& Token::AsString(Tok tok) {

@@ -6,6 +6,7 @@
 #define INTERPRETER_TOKEN_HPP
 
 #include <string>
+#include <memory>
 
 #include "Cursor.hpp"
 #include "Tok.hpp"
@@ -13,23 +14,22 @@
 
 struct Token {
     Cursor cursor;
-    Tok type;
+    Tok    type = Tok::None;
+
+    std::unique_ptr<Token> next;
 
     union {
         f32_t decimal;
         i32_t integer;
-        bool boolean;
-        char character;
+        bool  boolean;
+        char  character;
     };
 
     std::string identifier;
 
-             Token();
-    explicit Token(const Cursor&, Tok);
-    explicit Token(const Cursor&, Tok, const std::string&);
+    Token() = default;
 
-    static Token Identify(const Cursor&, const std::string&);
-
+    static void Identify(const std::string&, Token*);
     static const std::string& AsString(Tok);
     static Tok IsKeyword(const std::string&);
 };

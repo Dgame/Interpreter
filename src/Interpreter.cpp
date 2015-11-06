@@ -4,15 +4,16 @@
 
 #include "Interpreter.hpp"
 #include "Expression.hpp"
+#include "Token.hpp"
 #include "unique.hpp"
 
 #include <fstream>
 #include <locale>
 
 bool Interpreter::accept(Tok type) {
-    const Token tok = _lex.peek();
-    if (tok.type == type) {
-        _lex.confirm();
+    const Token* tok = _lex.peek();
+    if (tok->type == type) {
+        _lex.read();
 
         return true;
     }
@@ -22,17 +23,12 @@ bool Interpreter::accept(Tok type) {
 
 void Interpreter::expect(Tok type, u32_t line) {
     if (!this->accept(type)) {
-        const Token tok = _lex.reread();
+        const Token* tok = _lex.read();
 
-        error("Expected Token ",
-              Token::AsString(type),
-              ", got ",
-              Token::AsString(tok.type),
-              " @ line ",
-              tok.cursor.lineNr,
-              ". Called @ line ",
-              line
-        );
+        const std::string exp = Token::AsString(type);
+        const std::string got = Token::AsString(tok->type);
+
+        error("Expected Token ", exp, ", got ", got, " @ line ", tok->cursor.lineNr, ". Called @ line ", line);
     }
 }
 
@@ -54,19 +50,20 @@ void Interpreter::parse() {
     Tok type = Tok::None;
 
     while (true) {
-        const Token tok = _lex.peek();
-        type = tok.type;
+        type = _lex.peek()->type;
+
+//        debug(" > ", Token::AsString(type));
 
         switch (type) {
             case Tok::Mutable:
             case Tok::Immutable:
-                this->parseVariable(tok);
+                this->parseVariable();
                 continue;
             case Tok::Identifier:
-                this->parseAssignment(tok);
+                this->parseAssignment();
                 continue;
             case Tok::Output:
-                this->parsePrint(tok);
+                this->parsePrint();
                 continue;
             default:
                 break;
@@ -75,35 +72,36 @@ void Interpreter::parse() {
         break;
     }
 
-    ensure(type == Tok::Eof, "Invalid end of file");
+    ensure(type == Tok::Eof, "Invalid end of file: ", Token::AsString(type));
 }
 
-void Interpreter::parseVariable(const Token& tok) {
-    ensure(tok.type == Tok::Mutable || tok.type == Tok::Immutable, "Expected 'var' or 'let'");
-    _lex.confirm();
+void Interpreter::parseVariable() {
+    Token* tok = _lex.read();
+    ensure(tok->type == Tok::Mutable || tok->type == Tok::Immutable, "Expected 'var' or 'let' @ ", tok->cursor.lineNr);
+    const Tok type = tok->type;
 
-    const Token id = _lex.peek();
-    ensure(id.type == Tok::Identifier, "Expected a valid variable name @ ", id.cursor.lineNr);
-    _lex.confirm();
+    tok = _lex.read();
+    ensure(tok->type == Tok::Identifier, "Expected a valid variable name @ ", tok->cursor.lineNr);
+    const std::string id = tok->identifier;
 
-    VarDecl* vd = _scope->findVariable(id.identifier);
-    ensure(vd == nullptr, "A variable with name '", id.identifier, "' already exist");
+    VarDecl* vd = _scope->findVariable(id);
+    ensure(vd == nullptr, "A variable with name '", id, "' already exist");
 
     this->expect(Tok::Assign, __LINE__);
     Expr* exp = this->parseExpr();
     this->expect(Tok::Semicolon, __LINE__);
 
-    vd = new VarDecl(id.identifier, exp, tok.type == Tok::Immutable);
+    vd = new VarDecl(id, exp, type == Tok::Immutable);
     _scope->addVariable(vd);
 }
 
-void Interpreter::parseAssignment(const Token& tok) {
-    ensure(tok.type == Tok::Identifier, "Expected valid identifier for assignment");
-    _lex.confirm();
+void Interpreter::parseAssignment() {
+    const Token* tok = _lex.read();
+    ensure(tok->type == Tok::Identifier, "Expected valid identifier for assignment");
 
-    VarDecl* vd = _scope->findVariable(tok.identifier);
-    ensure(vd != nullptr, "Cannot assign unknown variable ", tok.identifier, " @ ", tok.cursor.lineNr);
-    ensure(!vd->isConst(), "Cannot modify const variable ", vd->getName(), " @ ", tok.cursor.lineNr);
+    VarDecl* vd = _scope->findVariable(tok->identifier);
+    ensure(vd != nullptr, "Cannot assign unknown variable ", tok->identifier, " @ ", tok->cursor.lineNr);
+    ensure(!vd->isConst(), "Cannot modify const variable ", vd->getName(), " @ ", tok->cursor.lineNr);
 
     bool hasIndex = false;
     Expr* index = nullptr;
@@ -111,11 +109,11 @@ void Interpreter::parseAssignment(const Token& tok) {
     if (this->accept(Tok::OpenBracket)) {
         hasIndex = true;
 
-        if (_lex.peek().type != Tok::CloseBracket) {
+        if (_lex.peek()->type != Tok::CloseBracket) {
             index = this->parseExpr();
             this->expect(Tok::CloseBracket, __LINE__);
         } else
-            _lex.confirm();
+            _lex.read();
     }
 
     this->expect(Tok::Assign, __LINE__);
@@ -131,23 +129,22 @@ void Interpreter::parseAssignment(const Token& tok) {
         vd->assign(exp);
 }
 
-void Interpreter::parsePrint(const Token& tok) {
-    ensure(tok.type == Tok::Output, "Expected 'print'");
-    _lex.confirm();
+void Interpreter::parsePrint() {
+    debug(" > parse print");
+
+    const Token* tok = _lex.read();
+    ensure(tok->type == Tok::Output, "Expected 'print'");
 
     std::unique_ptr<PrintDecl> decl = std::make_unique<PrintDecl>(std::cout);
 
     while (true) {
         Expr* exp = this->parseExpr();
-        if (!exp) {
-            error("Expected valid Expression for output");
-            break;
-        } else
-            decl->add(exp);
+        decl->add(exp);
 
-        if (_lex.peek().type != Tok::Comma)
+        if (_lex.peek()->type != Tok::Comma)
             break;
-        _lex.confirm();
+
+        _lex.read(); // skip ','
     }
 
     this->expect(Tok::Semicolon, __LINE__);
@@ -158,12 +155,8 @@ Expr* Interpreter::parseArrayExpr() {
     if (this->accept(Tok::OpenBracket)) {
         ArrayExpr* aexp = new ArrayExpr();
 
-        while (_lex.peek().type != Tok::CloseBracket) {
+        while (_lex.peek()->type != Tok::CloseBracket) {
             Expr* exp = this->parseExpr();
-            if (!exp) {
-                error("Expected valid Expression");
-                break;
-            }
             aexp->add(exp);
 
             if (!this->accept(Tok::Comma)) {
@@ -180,18 +173,18 @@ Expr* Interpreter::parseArrayExpr() {
 }
 
 Expr* Interpreter::parseNumericExpr() {
-    const Token tok = _lex.peek();
+    const Token* tok = _lex.peek();
 
-    if (tok.type == Tok::Integer) {
-        _lex.confirm();
+    if (tok->type == Tok::Integer) {
+        _lex.read();
 
-        return new IntExpr(tok.integer);
+        return new IntExpr(tok->integer);
     }
 
-    if (tok.type == Tok::Decimal) {
-        _lex.confirm();
+    if (tok->type == Tok::Decimal) {
+        _lex.read();
 
-        return new FloatExpr(tok.decimal);
+        return new FloatExpr(tok->decimal);
     }
 
     return nullptr;
@@ -202,11 +195,7 @@ Expr* Interpreter::parseIndexOfExpr(const VarDecl* vd) {
 
     if (this->accept(Tok::OpenBracket)) {
         Expr* index = this->parseExpr();
-        if (!index) {
-            error("Expected valid index Expression");
-        } else {
-            expr = new IndexExpr(vd, index);
-        }
+        expr = new IndexExpr(vd, index);
 
         this->expect(Tok::CloseBracket, __LINE__);
     }
@@ -215,28 +204,34 @@ Expr* Interpreter::parseIndexOfExpr(const VarDecl* vd) {
 }
 
 Expr* Interpreter::parseExpr() {
-    const Token tok = _lex.peek();
+    const Token* tok = _lex.peek();
 
-    switch (tok.type) {
+    switch (tok->type) {
         case Tok::String:
-            _lex.confirm();
-            return new StringExpr(tok.identifier);
+            _lex.read();
+
+            return new StringExpr(tok->identifier);
         case Tok::OpenBracket:
-            return this->parseArrayExpr();
+        {
+            Expr* exp = this->parseArrayExpr();
+            if (!exp)
+                error("Expected an Expression");
+
+            return exp;
+        }
         default:
             break;
     }
 
     Expr* lhs = this->parseTerm();
     if (!lhs)
-        return nullptr;
+        error("Expected an Expression");
 
     while (true) {
         if (this->accept(Tok::Plus)) {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
                 error("Expected factor after +");
-                break;
             }
 
             lhs = new AddExpr(lhs, rhs);
@@ -244,7 +239,6 @@ Expr* Interpreter::parseExpr() {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
                 error("Expected factor after -");
-                break;
             }
 
             lhs = new SubExpr(lhs, rhs);
@@ -252,7 +246,6 @@ Expr* Interpreter::parseExpr() {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
                 error("Expected factor after &");
-                break;
             }
 
             lhs = new BitAndExpr(lhs, rhs);
@@ -260,7 +253,6 @@ Expr* Interpreter::parseExpr() {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
                 error("Expected factor after |");
-                break;
             }
 
             lhs = new BitOrExpr(lhs, rhs);
@@ -268,7 +260,6 @@ Expr* Interpreter::parseExpr() {
             Expr* rhs = this->parseTerm();
             if (!rhs) {
                 error("Expected factor after |");
-                break;
             }
 
             lhs = new BitXorExpr(lhs, rhs);
@@ -289,7 +280,6 @@ Expr* Interpreter::parseTerm() {
             Expr* rhs = this->parseFactor();
             if (!rhs) {
                 error("Expected factor after *");
-                break;
             }
 
             lhs = new MulExpr(lhs, rhs);
@@ -297,7 +287,6 @@ Expr* Interpreter::parseTerm() {
             Expr* rhs = this->parseFactor();
             if (!rhs) {
                 error("Expected factor after /");
-                break;
             }
 
             lhs = new DivExpr(lhs, rhs);
@@ -319,14 +308,14 @@ Expr* Interpreter::parseTerm() {
 Expr* Interpreter::parseFactor() {
     std::vector<Tok> unaries;
     while (true) {
-        Token tok = _lex.peek();
+        const Token* tok = _lex.peek();
 
-        switch (tok.type) {
+        switch (tok->type) {
             case Tok::Not:
             case Tok::Minus:
             case Tok::BitNot:
-                unaries.push_back(tok.type);
-                _lex.confirm();
+                unaries.push_back(tok->type);
+                _lex.read();
                 continue;
 
             default:
@@ -374,26 +363,26 @@ Expr* Interpreter::parseFactor() {
 }
 
 Expr* Interpreter::parseVariableFactor() {
-    const Token tok = _lex.peek();
+    const Token* tok = _lex.peek();
 
-    if (tok.type != Tok::Identifier) {
-        error("Expected math factor or variable name", " @ ", tok.cursor.lineNr);
+    if (tok->type != Tok::Identifier) {
+        error("Expected math factor or variable name", " @ ", tok->cursor.lineNr);
 
         return nullptr;
     }
 
-    _lex.confirm();
+    _lex.read();
 
-    const VarDecl* vd = _scope->findVariable(tok.identifier);
+    const VarDecl* vd = _scope->findVariable(tok->identifier);
     if (vd) {
-        if (_lex.peek().type == Tok::OpenBracket) {
+        if (_lex.peek()->type == Tok::OpenBracket) {
             return this->parseIndexOfExpr(vd);
         }
 
         return new VarExpr(vd);
     }
 
-    error("Expected variable: ", tok.identifier, " @ ", tok.cursor.lineNr);
+    error("Expected variable: ", tok->identifier, " @ ", tok->cursor.lineNr);
 
     return nullptr;
 }

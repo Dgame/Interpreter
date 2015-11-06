@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Interpreter.hpp"
 #include "Expression.hpp"
+#include "Token.hpp"
 
 std::string getDirectory() {
     const std::string file(__FILE__);
@@ -25,8 +26,8 @@ int main() {
         Interpreter ip(path);
         ip.parse();
     } catch (const char* msg) {
-        std::cerr << msg << std::endl;
+        std::cerr << "Error: " << msg << std::endl;
     } catch (const std::string& str) {
-        std::cerr << str << std::endl;
+        std::cerr << "Error: " << str << std::endl;
     }
 }

@@ -3,10 +3,13 @@
 //
 
 #include "Lexer.hpp"
+#include "Token.hpp"
 #include "error.hpp"
 
 #include <fstream>
 #include <sstream>
+
+Lexer::Lexer() : _current(new Token()) { }
 
 void Lexer::load(const std::string& filename) {
     std::ifstream stream(filename);
@@ -16,7 +19,7 @@ void Lexer::load(const std::string& filename) {
         stream.close();
 
         _buffer = contents.str();
-        _loc = Location(&_buffer.front(), &_buffer.back());
+        _loc    = Location(&_buffer.front(), &_buffer.back());
 
         /*
          * Ignore possible header
@@ -46,8 +49,8 @@ bool Lexer::accept(char c) {
 bool Lexer::accept(Tok type) {
     _loc.track();
 
-    const Token tok = this->read();
-    if (tok.type != type) {
+    const Token* tok = this->read();
+    if (tok->type != type) {
         _loc.backtrack();
 
         return false;
@@ -68,7 +71,7 @@ bool Lexer::expect(char c) {
 
 bool Lexer::expect(Tok type) {
     if (!this->accept(type)) {
-        error("Expected Tok ", static_cast<i32_t>(type), " @ ", _loc.cursor.lineNr);
+        error("Expected Tok ", Token::AsString(type), " @ ", _loc.cursor.lineNr);
 
         return false;
     }
@@ -76,14 +79,15 @@ bool Lexer::expect(Tok type) {
     return true;
 }
 
-Token Lexer::read() {
-    _loc.track(); // track position
+void Lexer::scan(Token* tok) {
+    tok->type = Tok::None;
 
-    while (!_loc.eof()) {
+    while (true) {
         switch (_loc.getCurrent()) {
             case 0:
             case 0x1A:
-                return Token(_loc.cursor, Tok::Eof);
+                tok->type = Tok::Eof;
+                break;
             case ' ':
             case '\t':
             case '\v':
@@ -101,139 +105,179 @@ Token Lexer::read() {
             case '+':
                 if (_loc.peek() == '+')
                     error("Increment (++) is not supported");
+                else if (_loc.peek() == '=')
+                    error("+= is nut supported");
 
                 _loc.next();
 
-                return Token(_loc.cursor, Tok::Plus);
+                tok->type = Tok::Plus;
+                break;
             case '-':
                 if (_loc.peek() == '-')
                     error("Decrement (--) is not supported");
+
                 _loc.next();
-                return Token(_loc.cursor, Tok::Minus);
+
+                tok->type = Tok::Minus;
             case '*':
                 if (_loc.peek() == '*')
                     error("Pow (**) is not supported");
+
                 _loc.next();
-                return Token(_loc.cursor, Tok::Mul);
+
+                tok->type = Tok::Mul;
+                break;
             case '/':
                 if (_loc.peek() == '*')
                     error("C-comments (//) are not supported");
+
                 _loc.next();
-                return Token(_loc.cursor, Tok::Div);
+
+                tok->type = Tok::Div;
+                break;
             case '%':
                 if (_loc.peek() == '%')
                     error("%% is not supported");
+
                 _loc.next();
-                return Token(_loc.cursor, Tok::Mod);
+
+                tok->type = Tok::Mod;
+                break;
             case '(':
                 _loc.next();
-                return Token(_loc.cursor, Tok::OpenParen);
+
+                tok->type = Tok::OpenParen;
+                break;
             case ')':
                 _loc.next();
-                return Token(_loc.cursor, Tok::CloseParen);
+
+                tok->type = Tok::CloseParen;
+                break;
             case '[':
                 _loc.next();
-                return Token(_loc.cursor, Tok::OpenBracket);
+
+                tok->type = Tok::OpenBracket;
+                break;
             case ']':
                 _loc.next();
-                return Token(_loc.cursor, Tok::CloseBracket);
+
+                tok->type = Tok::CloseBracket;
+                break;
             case '{':
                 _loc.next();
-                return Token(_loc.cursor, Tok::OpenCurly);
+
+                tok->type = Tok::OpenCurly;
+                break;
             case '}':
                 _loc.next();
-                return Token(_loc.cursor, Tok::CloseCurly);
+
+                tok->type = Tok::CloseCurly;
+                break;
             case ',':
                 _loc.next();
-                return Token(_loc.cursor, Tok::Comma);
+
+                tok->type = Tok::Comma;
+                break;
             case '.':
                 _loc.next();
-                return Token(_loc.cursor, Tok::Dot);
+
+                tok->type = Tok::Dot;
+                break;
             case ':':
                 _loc.next();
-                return Token(_loc.cursor, Tok::Colon);
+
+                tok->type = Tok::Colon;
+                break;
             case ';':
                 _loc.next();
-                return Token(_loc.cursor, Tok::Semicolon);
+
+                tok->type = Tok::Semicolon;
+                break;
             case '=':
-            {
                 _loc.next();
 
-                const char c = _loc.getCurrent();
-                switch (c) {
-                    case '+':
-                    case '-':
-                    case '*':
-                    case '/':
-                    case '%':
-                    case '&':
-                    case '|':
-                    case '^':
-                        error("operation ", c, "= is not supported.");
-                        break;
-                    default: break;
-                }
-
-                if (c == '=') {
+                if (_loc.getCurrent() == '=') {
                     _loc.next();
-                    return Token(_loc.cursor, Tok::Equal);
-                }
 
-                return Token(_loc.cursor, Tok::Assign);
-            }
+                    tok->type = Tok::Equal;
+                } else {
+                    tok->type = Tok::Assign;
+                }
+                break;
             case '!':
                 _loc.next();
+
                 if (_loc.getCurrent() == '=') {
                     _loc.next();
-                    return Token(_loc.cursor, Tok::NotEqual);
-                }
 
-                return Token(_loc.cursor, Tok::Not);
+                    tok->type = Tok::NotEqual;
+                } else {
+                    tok->type = Tok::Not;
+                }
+                break;
             case '&':
                 _loc.next();
+
                 if (_loc.getCurrent() == '&') {
                     _loc.next();
-                    return Token(_loc.cursor, Tok::LogicAnd);
-                }
 
-                return Token(_loc.cursor, Tok::BitAnd);
+                    tok->type = Tok::LogicAnd;
+                } else {
+                    tok->type = Tok::BitAnd;
+                }
+                break;
             case '|':
                 _loc.next();
+
                 if (_loc.getCurrent() == '|') {
                     _loc.next();
-                    return Token(_loc.cursor, Tok::LogicOr);
-                }
 
-                return Token(_loc.cursor, Tok::BitOr);
+                    tok->type = Tok::LogicOr;
+                } else {
+                    tok->type = Tok::BitOr;
+                }
+                break;
             case '^':
                 _loc.next();
-                return Token(_loc.cursor, Tok::BitXor);
+
+                tok->type = Tok::BitXor;
+                break;
             case '~':
                 _loc.next();
-                return Token(_loc.cursor, Tok::BitNot);
+
+                tok->type = Tok::BitNot;
+                break;
             case '>':
                 _loc.next();
+
                 if (_loc.getCurrent() == '=') {
                     _loc.next();
-                    return Token(_loc.cursor, Tok::GreaterEqual);
-                }
 
-                return Token(_loc.cursor, Tok::Greater);
+                    tok->type = Tok::GreaterEqual;
+                } else {
+                    tok->type = Tok::Greater;
+                }
+                break;
             case '<':
                 _loc.next();
+
                 if (_loc.getCurrent() == '=') {
                     _loc.next();
-                    return Token(_loc.cursor, Tok::LowerEqual);
-                }
 
-                return Token(_loc.cursor, Tok::Lower);
+                    tok->type = Tok::LowerEqual;
+                } else {
+                    tok->type = Tok::Lower;
+                }
+                break;
             case '\'':
-                return this->readCharacter();
+                this->readCharacter(tok);
+                break;
             case '"':
-                return this->readString();
+                this->readString(tok);
+                break;
             case '#':
-            {
                 _loc.next();
+
                 while (!_loc.eof()) {
                     switch (_loc.getCurrent()) {
                         case 0:
@@ -255,30 +299,27 @@ Token Lexer::read() {
                 }
 
                 continue;
-            }
             default:
-            {
                 if (_loc.isAlpha() || _loc.getCurrent() == '_')
-                    return this->readIdentifier();
+                    this->readIdentifier(tok);
+                else if (_loc.isDigit() || (_loc.getCurrent() == '-' && _loc.isNextDigit()))
+                    this->readNumber(tok);
+                else
+                    tok->type = Tok::Eof;
 
-                if (_loc.isDigit() || (_loc.getCurrent() == '-' && _loc.isNextDigit())) {
-                    return this->readNumber();
-                }
-
-                return Token(_loc.cursor, Tok::Eof);
-            }
+                break;
         }
+
+        break;
     }
 
-    return Token(_loc.cursor, Tok::Eof);
+    if (tok->type != Tok::None)
+        tok->cursor = _loc.cursor;
 }
 
-Token Lexer::readIdentifier() {
-    if (!_loc.isAlpha()) {
+void Lexer::readIdentifier(Token* tok) {
+    if (!_loc.isAlpha())
         error("Expected identifier, not ", _loc.getCurrent(), " @ ", _loc.cursor.lineNr);
-
-        return Token(_loc.cursor, Tok::None);
-    }
 
     std::string str;
     str.reserve(32);
@@ -288,16 +329,16 @@ Token Lexer::readIdentifier() {
         _loc.next();
     }
 
-    return Token::Identify(_loc.cursor, str);
+    Token::Identify(str, tok);
 }
 
-Token Lexer::readNumber() {
+void Lexer::readNumber(Token* tok) {
     const bool isNegative = this->accept('-');
 
     if (!_loc.isDigit())
-        return Token(_loc.cursor, Tok::None);
+        error("Expected number, not ", _loc.getCurrent(), " @ ", _loc.cursor.lineNr);
 
-    Token tok(_loc.cursor, Tok::Integer);
+    tok->type = Tok::Integer;
 
     i32_t num = 0;
     do {
@@ -308,7 +349,7 @@ Token Lexer::readNumber() {
     } while (!_loc.eof() && _loc.isDigit());
 
     if (this->accept('.')) {
-        tok.type = Tok::Decimal;
+        tok->type = Tok::Decimal;
 
         f32_t pot = 1;
         i32_t dec = 0;
@@ -320,32 +361,28 @@ Token Lexer::readNumber() {
             _loc.next();
         } while (!_loc.eof() && _loc.isDigit());
 
-        tok.decimal = num + (dec / pot);
+        tok->decimal = num + (dec / pot);
 
         if (isNegative)
-            tok.decimal *= -1;
+            tok->decimal *= -1;
     } else {
-        tok.integer = num;
+        tok->integer = num;
 
         if (isNegative)
-            tok.integer *= -1;
+            tok->integer *= -1;
     }
-
-    return tok;
 }
 
-Token Lexer::readCharacter() {
+void Lexer::readCharacter(Token* tok) {
     this->expect('\'');
     const char c = _loc.getCurrent();
     this->expect('\'');
 
-    Token tok(_loc.cursor, Tok::Character);
-    tok.character = c;
-
-    return tok;
+    tok->type      = Tok::Character;
+    tok->character = c;
 }
 
-Token Lexer::readString() {
+void Lexer::readString(Token* tok) {
     this->expect('"');
 
     std::string str;
@@ -358,29 +395,31 @@ Token Lexer::readString() {
 
     this->expect('"');
 
-    return Token(_loc.cursor, Tok::String, str);
+    tok->type       = Tok::String;
+    tok->identifier = str;
 }
 
-Token Lexer::peek() {
-    _loc.track(); // track position
+Token* Lexer::peek(Token* tpl) {
+    if (tpl->next) {
+        return tpl->next.get();
+    }
 
-    const Token tok = this->read();
-
-    _peeks.push(_loc.seek());
-    _loc.backtrack(); // go back
+    Token* tok = new Token();
+    this->scan(tok);
+    tpl->next.reset(tok);
 
     return tok;
 }
 
-void Lexer::confirm() {
-    const char* pos = _peeks.top();
-    _peeks.pop();
+Token* Lexer::read() {
+    if (_current->next)
+        _current = std::move(_current->next);
+    else
+        this->scan(_current.get());
 
-    _loc.tell(pos);
+    return _current.get();
 }
 
-Token Lexer::reread() {
-    _loc.backtrack(); // go to last readed position
-
-    return this->read();
+Token* Lexer::peek() {
+    return this->peek(_current.get());
 }
