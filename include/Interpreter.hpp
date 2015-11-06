@@ -44,6 +44,7 @@ private:
     Expr* parseNumericExpr();
     Expr* parseIndexOfExpr(const VarDecl*);
     Expr* parseExpr();
+    Expr* parseMath();
     Expr* parseTerm();
     Expr* parseFactor();
     Expr* parseVariableFactor();

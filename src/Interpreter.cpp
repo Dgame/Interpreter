@@ -227,6 +227,10 @@ Expr* Interpreter::parseExpr() {
             break;
     }
 
+    return this->parseMath();
+}
+
+Expr* Interpreter::parseMath() {
     Expr* lhs = this->parseTerm();
     if (!lhs)
         error("Expected an Expression");
