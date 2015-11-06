@@ -14,7 +14,7 @@ set(SOURCE_FILES main.cpp
                 src/Visitor/Output.cpp
                 src/Visitor/Print.cpp
                 src/Scope.cpp
-                src/Interpreter.cpp include/unique.hpp)
+                src/Interpreter.cpp)
 
 include_directories("include")
 include_directories("include/Visitor")

@@ -223,6 +223,18 @@ Expr* Interpreter::parseExpr() {
 
             return exp;
         }
+        case Tok::True:
+            _lex.read();
+
+            return new BoolExpr(true);
+        case Tok::False:
+            _lex.read();
+
+            return new BoolExpr(false);
+        case Tok::Null:
+            _lex.read();
+
+            return new NullExpr();
         default:
             break;
     }

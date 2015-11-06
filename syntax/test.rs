@@ -53,3 +53,9 @@ abc[] = 'y';
 abc[] = 'z';
 
 print "abc: ", abc[0], ':', abc;
+
+let t1 = true;
+let t2 = false;
+let t3 = null;
+
+print t1, ':', t2, ':', t3;

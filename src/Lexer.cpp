@@ -105,8 +105,9 @@ void Lexer::scan(Token* tok) {
             case '+':
                 if (_loc.peek() == '+')
                     error("Increment (++) is not supported");
-                else if (_loc.peek() == '=')
-                    error("+= is nut supported");
+
+                if (_loc.peek() == '=')
+                    error("+= is not supported");
 
                 _loc.next();
 
@@ -116,6 +117,9 @@ void Lexer::scan(Token* tok) {
                 if (_loc.peek() == '-')
                     error("Decrement (--) is not supported");
 
+                if (_loc.peek() == '=')
+                    error("-= is not supported");
+
                 _loc.next();
 
                 tok->type = Tok::Minus;
@@ -123,13 +127,22 @@ void Lexer::scan(Token* tok) {
                 if (_loc.peek() == '*')
                     error("Pow (**) is not supported");
 
+                if (_loc.peek() == '=')
+                    error("*= is not supported");
+
                 _loc.next();
 
                 tok->type = Tok::Mul;
                 break;
             case '/':
-                if (_loc.peek() == '*')
+                if (_loc.peek() == '/')
                     error("C-comments (//) are not supported");
+
+                if (_loc.peek() == '*')
+                    error("C-comments (/*) are not supported");
+
+                if (_loc.peek() == '=')
+                    error("/= is not supported");
 
                 _loc.next();
 
@@ -138,6 +151,9 @@ void Lexer::scan(Token* tok) {
             case '%':
                 if (_loc.peek() == '%')
                     error("%% is not supported");
+
+                if (_loc.peek() == '=')
+                    error("%= is not supported");
 
                 _loc.next();
 
@@ -218,6 +234,9 @@ void Lexer::scan(Token* tok) {
             case '&':
                 _loc.next();
 
+                if (_loc.peek() == '=')
+                    error("&= is not supported");
+
                 if (_loc.getCurrent() == '&') {
                     _loc.next();
 
@@ -229,6 +248,9 @@ void Lexer::scan(Token* tok) {
             case '|':
                 _loc.next();
 
+                if (_loc.peek() == '=')
+                     error("|= is not supported");
+
                 if (_loc.getCurrent() == '|') {
                     _loc.next();
 
@@ -238,11 +260,17 @@ void Lexer::scan(Token* tok) {
                 }
                 break;
             case '^':
+                if (_loc.peek() == '=')
+                    error("^= is not supported");
+
                 _loc.next();
 
                 tok->type = Tok::BitXor;
                 break;
             case '~':
+                if (_loc.peek() == '=')
+                    error("~= is not supported");
+
                 _loc.next();
 
                 tok->type = Tok::BitNot;

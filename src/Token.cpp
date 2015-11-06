@@ -6,47 +6,56 @@
 #include <map>
 
 namespace {
-    std::map<Tok, std::string> Tokens = {
-        {Tok::None, "None"},
-        {Tok::Eof, "EOF"},
-        {Tok::Integer, "Integer"},
-        {Tok::Decimal, "Decimal"},
-        {Tok::Boolean, "Boolean"},
-        {Tok::Character, "Character"},
-        {Tok::String, "String"},
-        {Tok::Identifier, "Identifier"},
-        {Tok::Mutable, "var"},
-        {Tok::Immutable, "let"},
-        {Tok::Output, "print"},
-        {Tok::Plus, "+"},
-        {Tok::Minus, "-"},
-        {Tok::Mul, "*"},
-        {Tok::Div, "/"},
-        {Tok::Mod, "%"},
-        {Tok::OpenParen, "("},
-        {Tok::CloseParen, ")"},
-        {Tok::OpenBracket, "["},
-        {Tok::CloseBracket, "]"},
-        {Tok::OpenCurly, "{"},
-        {Tok::CloseCurly, "}"},
-        {Tok::Comma, ","},
-        {Tok::Dot, "."},
-        {Tok::Colon, ":"},
-        {Tok::Semicolon, ";"},
-        {Tok::Assign, "="},
-        {Tok::Equal, "=="},
-        {Tok::Not, "!"},
-        {Tok::NotEqual, "!="},
-        {Tok::LogicAnd, "&&"},
-        {Tok::BitAnd, "&"},
-        {Tok::LogicOr, "||"},
-        {Tok::BitOr, "|"},
-        {Tok::BitXor, "^"},
-        {Tok::BitNot, "~"},
-        {Tok::Greater, ">"},
-        {Tok::GreaterEqual, ">="},
-        {Tok::Lower, "<"},
-        {Tok::LowerEqual, "<="},
+    const std::map<Tok, std::string> Tokens = {
+            {Tok::None,         "None"},
+            {Tok::Eof,          "EOF"},
+            {Tok::Integer,      "Integer"},
+            {Tok::Decimal,      "Decimal"},
+            {Tok::Character,    "Character"},
+            {Tok::String,       "String"},
+            {Tok::Identifier,   "Identifier"},
+            {Tok::Plus,         "+"},
+            {Tok::Minus,        "-"},
+            {Tok::Mul,          "*"},
+            {Tok::Div,          "/"},
+            {Tok::Mod,          "%"},
+            {Tok::OpenParen,    "("},
+            {Tok::CloseParen,   ")"},
+            {Tok::OpenBracket,  "["},
+            {Tok::CloseBracket, "]"},
+            {Tok::OpenCurly,    "{"},
+            {Tok::CloseCurly,   "}"},
+            {Tok::Comma,        ","},
+            {Tok::Dot,          "."},
+            {Tok::Colon,        ":"},
+            {Tok::Semicolon,    ";"},
+            {Tok::Assign,       "="},
+            {Tok::Equal,        "=="},
+            {Tok::Not,          "!"},
+            {Tok::NotEqual,     "!="},
+            {Tok::LogicAnd,     "&&"},
+            {Tok::BitAnd,       "&"},
+            {Tok::LogicOr,      "||"},
+            {Tok::BitOr,        "|"},
+            {Tok::BitXor,       "^"},
+            {Tok::BitNot,       "~"},
+            {Tok::Greater,      ">"},
+            {Tok::GreaterEqual, ">="},
+            {Tok::Lower,        "<"},
+            {Tok::LowerEqual,   "<="},
+    };
+
+    const std::map<Tok, std::string> Keywords = {
+            {Tok::Mutable,      "var"},
+            {Tok::Immutable,    "let"},
+            {Tok::Output,       "print"},
+            {Tok::Null,         "null"},
+            {Tok::True,         "true"},
+            {Tok::False,        "false"},
+            {Tok::If,           "if"},
+            {Tok::Else,         "else"},
+            {Tok::For,          "for"},
+            {Tok::While,        "while"},
     };
 }
 
@@ -70,12 +79,17 @@ const std::string& Token::AsString(Tok tok) {
         return it->second;
     }
 
+    it = Keywords.find(tok);
+    if (it != Tokens.end()) {
+        return it->second;
+    }
+
     return Token::AsString(Tok::None);
 }
 
 Tok Token::IsKeyword(const std::string& str) {
-    for (auto& pair : Tokens) {
-        if (pair.second == str)
+    for (auto& pair : Keywords) {
+        if (pair.second.compare(str) == 0)
             return pair.first;
     }
 

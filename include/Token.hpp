@@ -21,7 +21,6 @@ struct Token {
     union {
         f32_t decimal;
         i32_t integer;
-        bool  boolean;
         char  character;
     };
 
