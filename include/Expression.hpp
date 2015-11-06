@@ -5,7 +5,6 @@
 #ifndef INTERPRETER_EXPRESSION_HPP
 #define INTERPRETER_EXPRESSION_HPP
 
-
 #include <ostream>
 #include <string>
 #include <vector>

@@ -5,9 +5,6 @@
 #ifndef INTERPRETER_INTERPRETER_HPP
 #define INTERPRETER_INTERPRETER_HPP
 
-#ifndef INTERPRETER_HPP
-#define INTERPRETER_HPP
-
 #include <ostream>
 #include <memory>
 #include <vector>
@@ -49,7 +46,5 @@ private:
     Expr* parseFactor();
     Expr* parseVariableFactor();
 };
-
-#endif
 
 #endif //INTERPRETER_INTERPRETER_HPP
