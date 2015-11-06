@@ -376,6 +376,7 @@ void Lexer::readNumber(Token* tok) {
 void Lexer::readCharacter(Token* tok) {
     this->expect('\'');
     const char c = _loc.getCurrent();
+    _loc.next();
     this->expect('\'');
 
     tok->type      = Tok::Character;

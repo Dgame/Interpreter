@@ -211,6 +211,10 @@ Expr* Interpreter::parseExpr() {
             _lex.read();
 
             return new StringExpr(tok->identifier);
+        case Tok::Character:
+            _lex.read();
+
+            return new CharExpr(tok->character);
         case Tok::OpenBracket:
         {
             Expr* exp = this->parseArrayExpr();
