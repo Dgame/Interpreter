@@ -41,6 +41,8 @@ private:
     Expr* parseNumericExpr();
     Expr* parseIndexOfExpr(const VarDecl*);
     Expr* parseExpr();
+    Expr* parseCompare();
+    Expr* parseCondition();
     Expr* parseMath();
     Expr* parseTerm();
     Expr* parseFactor();

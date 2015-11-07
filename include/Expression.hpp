@@ -68,14 +68,6 @@ struct FloatExpr : public Expr {
     virtual void accept(Visitor*) const;
 };
 
-struct BoolExpr : public Expr {
-    bool value = false;
-
-    explicit BoolExpr(bool);
-
-    virtual void accept(Visitor*) const;
-};
-
 struct CharExpr : public Expr {
     char value = 0;
 
@@ -177,5 +169,34 @@ struct BitXorExpr : public BinExpr {
     virtual void accept(Visitor*) const;
 };
 
+struct AndExpr : public BinExpr {
+    explicit AndExpr(Expr*, Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
+struct OrExpr : public BinExpr {
+    explicit OrExpr(Expr*, Expr*);
+
+    virtual void accept(Visitor*) const;
+};
+
+enum class Compare {
+    None,
+    Equal,
+    NotEqual,
+    Lower,
+    LowerOrEqual,
+    Greater,
+    GreaterOrEqual
+};
+
+struct CompareExpr : public BinExpr {
+    const Compare cmp;
+
+    explicit CompareExpr(Expr*, Compare, Expr*);
+
+    virtual void accept(Visitor*) const;
+};
 
 #endif //INTERPRETER_EXPRESSION_HPP

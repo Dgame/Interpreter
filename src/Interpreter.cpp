@@ -226,11 +226,11 @@ Expr* Interpreter::parseExpr() {
         case Tok::True:
             _lex.read();
 
-            return new BoolExpr(true);
+            return new IntExpr(1);
         case Tok::False:
             _lex.read();
 
-            return new BoolExpr(false);
+            return new IntExpr(0);
         case Tok::Null:
             _lex.read();
 
@@ -239,7 +239,57 @@ Expr* Interpreter::parseExpr() {
             break;
     }
 
-    return this->parseMath();
+    Expr* exp = this->parseCompare();
+    if (!exp)
+        error("No Expression found");
+
+    return exp;
+}
+
+Expr* Interpreter::parseCompare() {
+    Expr* lhs = this->parseCondition();
+
+    while (true) {
+        if (this->accept(Tok::Equal)) {
+            Expr* rhs = this->parseCondition();
+            lhs = new CompareExpr(lhs, Compare::Equal, rhs);
+        } else if (this->accept(Tok::NotEqual)) {
+            Expr* rhs = this->parseCondition();
+            lhs = new CompareExpr(lhs, Compare::NotEqual, rhs);
+        } else if (this->accept(Tok::Lower)) {
+            Expr* rhs = this->parseCondition();
+            lhs = new CompareExpr(lhs, Compare::Lower, rhs);
+        } else if (this->accept(Tok::LowerEqual)) {
+            Expr* rhs = this->parseCondition();
+            lhs = new CompareExpr(lhs, Compare::LowerOrEqual, rhs);
+        } else if (this->accept(Tok::Greater)) {
+            Expr* rhs = this->parseCondition();
+            lhs = new CompareExpr(lhs, Compare::Greater, rhs);
+        } else if (this->accept(Tok::GreaterEqual)) {
+            Expr* rhs = this->parseCondition();
+            lhs = new CompareExpr(lhs, Compare::GreaterOrEqual, rhs);
+        } else
+            break;
+    }
+
+    return lhs;
+}
+
+Expr* Interpreter::parseCondition() {
+    Expr* lhs = this->parseMath();
+
+    while (true) {
+        if (this->accept(Tok::LogicAnd)) {
+            Expr* rhs = this->parseMath();
+            lhs = new AndExpr(lhs, rhs);
+        } else if (this->accept(Tok::LogicOr)) {
+            Expr* rhs = this->parseMath();
+            lhs = new OrExpr(lhs, rhs);
+        } else
+            break;
+    }
+
+    return lhs;
 }
 
 Expr* Interpreter::parseMath() {

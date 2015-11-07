@@ -42,12 +42,6 @@ void FloatExpr::accept(Visitor* v) const {
     v->visit(this);
 }
 
-BoolExpr::BoolExpr(bool val) : value(val) { }
-
-void BoolExpr::accept(Visitor* v) const {
-    v->visit(this);
-}
-
 CharExpr::CharExpr(char val) : value(val) { }
 
 void CharExpr::accept(Visitor* v) const {
@@ -133,5 +127,23 @@ void BitNotExpr::accept(Visitor* v) const {
 BitXorExpr::BitXorExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
 
 void BitXorExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+AndExpr::AndExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
+
+void AndExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+OrExpr::OrExpr(Expr* l, Expr* r) : BinExpr(l, r) { }
+
+void OrExpr::accept(Visitor* v) const {
+    v->visit(this);
+}
+
+CompareExpr::CompareExpr(Expr* l, Compare cop, Expr* r) : BinExpr(l, r), cmp(cop) { }
+
+void CompareExpr::accept(Visitor* v) const {
     v->visit(this);
 }

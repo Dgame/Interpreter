@@ -12,7 +12,6 @@ struct ArrayExpr;
 struct IndexExpr;
 struct IntExpr;
 struct FloatExpr;
-struct BoolExpr;
 struct CharExpr;
 struct StringExpr;
 struct NegationExpr;
@@ -27,6 +26,9 @@ struct BitAndExpr;
 struct BitOrExpr;
 struct BitNotExpr;
 struct BitXorExpr;
+struct AndExpr;
+struct OrExpr;
+struct CompareExpr;
 
 struct Visitor {
     virtual ~Visitor() { }
@@ -56,10 +58,6 @@ struct Visitor {
     }
 
     virtual void visit(const FloatExpr*) {
-        this->fail();
-    }
-
-    virtual void visit(const BoolExpr*) {
         this->fail();
     }
 
@@ -116,6 +114,18 @@ struct Visitor {
     }
 
     virtual void visit(const BitXorExpr*) {
+        this->fail();
+    }
+
+    virtual void visit(const AndExpr*) {
+        this->fail();
+    }
+
+    virtual void visit(const OrExpr*) {
+        this->fail();
+    }
+
+    virtual void visit(const CompareExpr*) {
         this->fail();
     }
 };

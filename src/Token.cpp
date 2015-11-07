@@ -89,7 +89,7 @@ const std::string& Token::AsString(Tok tok) {
 
 Tok Token::IsKeyword(const std::string& str) {
     for (auto& pair : Keywords) {
-        if (pair.second.compare(str) == 0)
+        if (pair.second == str)
             return pair.first;
     }
 

@@ -47,10 +47,6 @@ void Output::visit(const FloatExpr* fe) {
     _out << fe->value;
 }
 
-void Output::visit(const BoolExpr* be) {
-    _out << (be->value ? "true" : "false");
-}
-
 void Output::visit(const CharExpr* ce) {
     _out << ce->value;
 }
@@ -127,6 +123,24 @@ void Output::visit(const BitNotExpr* bne) {
 
 void Output::visit(const BitXorExpr* bxe) {
     Eval ev(bxe);
+
+    _out << ev.value;
+}
+
+void Output::visit(const AndExpr* ande) {
+    Eval ev(ande);
+
+    _out << ev.value;
+}
+
+void Output::visit(const OrExpr* ore) {
+    Eval ev(ore);
+
+    _out << ev.value;
+}
+
+void Output::visit(const CompareExpr* cmpe) {
+    Eval ev(cmpe);
 
     _out << ev.value;
 }

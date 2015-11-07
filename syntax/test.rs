@@ -58,4 +58,21 @@ let t1 = true;
 let t2 = false;
 let t3 = null;
 
-print t1, ':', t2, ':', t3;
+print "tfn: ", t1, ':', t2, ':', t3;
+print "tfn: ", t1, " <-> ", !t1, " : ", !t2;
+
+let c1 = 1 && 1;
+let c2 = 1 || 1;
+let c3 = 1 && 0;
+let c4 = 1 || 0;
+
+print "and/or: ", c1, ':', c2, ':', c3, ':', c4;
+
+let c5 = 4 > 5;
+let c6 = 4 < 5;
+let c7 = 42 == 42;
+let c8 = 42 == 23;
+let c9 = 42 != 23;
+let c10 = 42 != 42;
+
+print "cmp: ", c5, ':', c6, ':', c7, ':', c8, ':', c9, ':', c10;

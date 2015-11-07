@@ -19,7 +19,6 @@ struct Output : public Visitor {
     virtual void visit(const IndexExpr*);
     virtual void visit(const IntExpr*);
     virtual void visit(const FloatExpr*);
-    virtual void visit(const BoolExpr*);
     virtual void visit(const CharExpr*);
     virtual void visit(const StringExpr*);
     virtual void visit(const NegationExpr*);
@@ -34,6 +33,9 @@ struct Output : public Visitor {
     virtual void visit(const BitOrExpr*);
     virtual void visit(const BitNotExpr*);
     virtual void visit(const BitXorExpr*);
+    virtual void visit(const AndExpr*);
+    virtual void visit(const OrExpr*);
+    virtual void visit(const CompareExpr*);
 };
 
 #endif //INTERPRETER_OUTPUT_HPP

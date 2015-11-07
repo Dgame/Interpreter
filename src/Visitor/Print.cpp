@@ -47,10 +47,6 @@ void Print::visit(const FloatExpr* fe) {
     _out << fe->value;
 }
 
-void Print::visit(const BoolExpr* be) {
-    _out << (be->value ? "true" : "false");
-}
-
 void Print::visit(const CharExpr* ce) {
     _out << ce->value;
 }
@@ -126,4 +122,45 @@ void Print::visit(const BitXorExpr* bxe) {
     bxe->lhs->accept(this);
     _out << " ^ ";
     bxe->rhs->accept(this);
+}
+
+void Print::visit(const AndExpr* ande) {
+    ande->lhs->accept(this);
+    _out << " && ";
+    ande->rhs->accept(this);
+}
+
+void Print::visit(const OrExpr* ore) {
+    ore->lhs->accept(this);
+    _out << " || ";
+    ore->rhs->accept(this);
+}
+
+void Print::visit(const CompareExpr* cmpe) {
+    cmpe->lhs->accept(this);
+
+    switch (cmpe->cmp) {
+        case Compare::Equal:
+            _out << " == ";
+            break;
+        case Compare::NotEqual:
+            _out << " != ";
+            break;
+        case Compare::Greater:
+            _out << " > ";
+            break;
+        case Compare::GreaterOrEqual:
+            _out << " >= ";
+            break;
+        case Compare::Lower:
+            _out << " < ";
+            break;
+        case Compare::LowerOrEqual:
+            _out << " <= ";
+            break;
+        default:
+            error("Unknown comparison");
+    }
+
+    cmpe->rhs->accept(this);
 }
