@@ -187,6 +187,18 @@ Expr* Interpreter::parseNumericExpr() {
         return new FloatExpr(tok->decimal);
     }
 
+    if (tok->type == Tok::True) {
+        _lex.read();
+
+        return new IntExpr(1);
+    }
+
+   if (tok->type == Tok::False) {
+       _lex.read();
+
+       return new IntExpr(0);
+   }
+
     return nullptr;
 }
 
@@ -223,14 +235,6 @@ Expr* Interpreter::parseExpr() {
 
             return exp;
         }
-        case Tok::True:
-            _lex.read();
-
-            return new IntExpr(1);
-        case Tok::False:
-            _lex.read();
-
-            return new IntExpr(0);
         case Tok::Null:
             _lex.read();
 
@@ -252,21 +256,45 @@ Expr* Interpreter::parseCompare() {
     while (true) {
         if (this->accept(Tok::Equal)) {
             Expr* rhs = this->parseCondition();
+            if (!rhs) {
+                error("Expected Expression after ==");
+            }
+
             lhs = new CompareExpr(lhs, Compare::Equal, rhs);
         } else if (this->accept(Tok::NotEqual)) {
             Expr* rhs = this->parseCondition();
+            if (!rhs) {
+                error("Expected Expression after !=");
+            }
+
             lhs = new CompareExpr(lhs, Compare::NotEqual, rhs);
         } else if (this->accept(Tok::Lower)) {
             Expr* rhs = this->parseCondition();
+            if (!rhs) {
+                error("Expected Expression after <");
+            }
+
             lhs = new CompareExpr(lhs, Compare::Lower, rhs);
         } else if (this->accept(Tok::LowerEqual)) {
             Expr* rhs = this->parseCondition();
+            if (!rhs) {
+                error("Expected Expression after <=");
+            }
+
             lhs = new CompareExpr(lhs, Compare::LowerOrEqual, rhs);
         } else if (this->accept(Tok::Greater)) {
             Expr* rhs = this->parseCondition();
+            if (!rhs) {
+                error("Expected Expression after >");
+            }
+
             lhs = new CompareExpr(lhs, Compare::Greater, rhs);
         } else if (this->accept(Tok::GreaterEqual)) {
             Expr* rhs = this->parseCondition();
+            if (!rhs) {
+                error("Expected Expression after >=");
+            }
+
             lhs = new CompareExpr(lhs, Compare::GreaterOrEqual, rhs);
         } else
             break;
@@ -281,9 +309,17 @@ Expr* Interpreter::parseCondition() {
     while (true) {
         if (this->accept(Tok::LogicAnd)) {
             Expr* rhs = this->parseMath();
+            if (!rhs) {
+                error("Expected Expression after &&");
+            }
+
             lhs = new AndExpr(lhs, rhs);
         } else if (this->accept(Tok::LogicOr)) {
             Expr* rhs = this->parseMath();
+            if (!rhs) {
+                error("Expected Expression after ||");
+            }
+
             lhs = new OrExpr(lhs, rhs);
         } else
             break;

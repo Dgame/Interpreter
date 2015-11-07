@@ -76,3 +76,9 @@ let c9 = 42 != 23;
 let c10 = 42 != 42;
 
 print "cmp: ", c5, ':', c6, ':', c7, ':', c8, ':', c9, ':', c10;
+
+print (1 && 1 || 0);
+
+print "t&f: ", true && false;
+print true && true;
+print true || false;
