@@ -1,33 +1,35 @@
 #include <iostream>
-#include "Interpreter.hpp"
-#include "Expression.hpp"
-#include "Token.hpp"
-
-std::string getDirectory() {
-    const std::string file(__FILE__);
-
-    u32_t ds = 0;
-
-    for (u32_t i = file.size() - 1; i > 0; i--) {
-        if (file[i] == '\\') {
-            ds = i;
-            break;
-        }
-    }
-
-    return file.substr(0, ds + 1);
-}
+#include "Expr.hpp"
+#include "Visitor.hpp"
+#include "unique.hpp"
 
 int main() {
-    try {
-        std::string path = getDirectory();
-        path.append("syntax/test.rs");
+    auto arr = std::make_unique<ArrayExpr>();
+    arr->add(new NumberExpr(1));
+    arr->add(new NumberExpr(2));
+    arr->add(new NumberExpr(3));
+    arr->add(new NumberExpr(4));
 
-        Interpreter ip(path);
-        ip.parse();
-    } catch (const char* msg) {
-        std::cerr << "Error: " << msg << std::endl;
-    } catch (const std::string& str) {
-        std::cerr << "Error: " << str << std::endl;
+    auto e1 = std::make_unique<IndexAssignExpr>(arr.get(),
+                                                new NumberExpr(1),
+                                                new NumberExpr(42));
+    auto e2 = std::make_unique<IndexAssignExpr>(arr.get(),
+                                                new AddExpr(new NumberExpr(1), new NumberExpr(2)),
+                                                new NumberExpr(23));
+
+    Visitor v;
+
+    e1->accept(&v);
+    for (auto& item : arr->expressions) {
+        NumberExpr* nr = static_cast<NumberExpr*>(item.get());
+        writeln(nr->value);
+    }
+
+    writeln("--------");
+
+    e2->accept(&v);
+    for (auto& item : arr->expressions) {
+        NumberExpr* nr = static_cast<NumberExpr*>(item.get());
+        writeln(nr->value);
     }
 }

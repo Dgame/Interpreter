@@ -1,23 +1,16 @@
-//
-// Created by Randy on 31.10.2015.
-//
+#ifndef TYPES_HPP
+#define TYPES_HPP
 
-#ifndef INTERPRETER_TYPES_HPP
-#define INTERPRETER_TYPES_HPP
-
-#include <cstdint>
-
-using u64_t = std::uint64_t;
-using u32_t = std::uint32_t;
-using u16_t = std::uint16_t;
-using u8_t  = std::uint8_t;
-
-using i64_t = std::int64_t;
-using i32_t = std::int32_t;
-using i16_t = std::int16_t;
-using i8_t  = std::int8_t;
+using u64_t = unsigned long int;
+using i64_t = long int;
+using u32_t = unsigned int;
+using i32_t = int;
+using u16_t = unsigned short int;
+using i16_t = short int;
+using u8_t = unsigned char;
+using i8_t = char;
 
 using f64_t = double;
 using f32_t = float;
 
-#endif //INTERPRETER_TYPES_HPP
+#endif
