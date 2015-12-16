@@ -1,9 +1,5 @@
-//
-// Created by Randy on 31.10.2015.
-//
-
-#ifndef INTERPRETER_UNIQUE_HPP
-#define INTERPRETER_UNIQUE_HPP
+#ifndef UNIQUE_HPP
+#define UNIQUE_HPP
 
 #include <memory>
 
@@ -14,4 +10,4 @@ namespace std {
     }
 }
 
-#endif //INTERPRETER_UNIQUE_HPP
+#endif
