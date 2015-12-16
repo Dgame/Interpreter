@@ -12,6 +12,7 @@ struct DivExpr;
 struct NotExpr;
 struct NegateExpr;
 struct ArrayExpr;
+struct IndexExpr;
 struct IndexAssignExpr;
 
 struct Visitor {
@@ -51,7 +52,13 @@ struct Visitor {
         assert(0, "ArrayExpr not implemented");
     }
 
-    virtual void visit(IndexAssignExpr*);
+    virtual void visit(IndexExpr*) {
+        assert(0, "IndexExpr not implemented");
+    }
+
+    virtual void visit(IndexAssignExpr*) {
+        assert(0, "IndexAssignExpr not implemented");
+    }
 };
 
 #endif

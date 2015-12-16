@@ -1,6 +1,6 @@
 #include <iostream>
 #include "Expr.hpp"
-#include "Visitor.hpp"
+#include "Eval.hpp"
 #include "unique.hpp"
 
 int main() {
@@ -17,9 +17,9 @@ int main() {
                                                 new AddExpr(new NumberExpr(1), new NumberExpr(2)),
                                                 new NumberExpr(23));
 
-    Visitor v;
+    Eval e;
 
-    e1->accept(&v);
+    e1->accept(&e);
     for (auto& item : arr->expressions) {
         NumberExpr* nr = static_cast<NumberExpr*>(item.get());
         writeln(nr->value);
@@ -27,7 +27,7 @@ int main() {
 
     writeln("--------");
 
-    e2->accept(&v);
+    e2->accept(&e);
     for (auto& item : arr->expressions) {
         NumberExpr* nr = static_cast<NumberExpr*>(item.get());
         writeln(nr->value);

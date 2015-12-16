@@ -24,6 +24,7 @@ void Math::visit(NegateExpr* exp) {
 void Math::visit(AddExpr* exp) {
     exp->left->accept(this);
     const float lhs = this->value;
+    
     exp->right->accept(this);
     const float rhs = this->value;
 
@@ -33,6 +34,7 @@ void Math::visit(AddExpr* exp) {
 void Math::visit(SubExpr* exp) {
     exp->left->accept(this);
     const float lhs = this->value;
+    
     exp->right->accept(this);
     const float rhs = this->value;
 
@@ -42,6 +44,7 @@ void Math::visit(SubExpr* exp) {
 void Math::visit(MulExpr* exp) {
     exp->left->accept(this);
     const float lhs = this->value;
+    
     exp->right->accept(this);
     const float rhs = this->value;
 
@@ -51,6 +54,7 @@ void Math::visit(MulExpr* exp) {
 void Math::visit(DivExpr* exp) {
     exp->left->accept(this);
     const float lhs = this->value;
+    
     exp->right->accept(this);
     const float rhs = this->value;
 

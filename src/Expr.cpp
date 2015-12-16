@@ -1,7 +1,7 @@
 #include "Expr.hpp"
 #include "Visitor.hpp"
 
-NumberExpr::NumberExpr(float val) : value(val) { }
+NumberExpr::NumberExpr(f32_t val) : value(val) {}
 
 NumericExpr* NumberExpr::syntaxCopy() {
     return new NumberExpr(this->value);
@@ -23,7 +23,7 @@ void CharExpr::accept(Visitor* v) {
 }
 
 
-template <typename T>
+template<typename T>
 BinaryExpr<T>::BinaryExpr(T* lhs, T* rhs) : left(lhs), right(rhs) { }
 
 
@@ -74,7 +74,7 @@ void DivExpr::accept(Visitor* v) {
 }
 
 
-template <typename T>
+template<typename T>
 UnaryExpr<T>::UnaryExpr(T* e) : exp(e) { }
 
 
@@ -107,11 +107,11 @@ void ArrayExpr::add(Expr* exp) {
     this->expressions.emplace_back(exp);
 }
 
-void ArrayExpr::setAt(int index, Expr* exp) {
+void ArrayExpr::setAt(u32_t index, Expr* exp) {
     this->expressions.at(index).reset(exp);
 }
 
-Expr* ArrayExpr::getAt(int index) {
+Expr* ArrayExpr::getAt(u32_t index) {
     return this->expressions.at(index).get();
 }
 
@@ -129,7 +129,18 @@ void ArrayExpr::accept(Visitor* v) {
 }
 
 
-IndexAssignExpr::IndexAssignExpr(AccessExpr* arr, NumericExpr* idx, Expr* val) : array(arr), index(idx),
+IndexExpr::IndexExpr(AccessExpr* arr, NumericExpr* idx) : array(arr), index(idx) { }
+
+IndexExpr* IndexExpr::syntaxCopy() {
+    return new IndexExpr(this->array, this->index->syntaxCopy());
+}
+
+void IndexExpr::accept(Visitor* v) {
+    v->visit(this);
+}
+
+
+IndexAssignExpr::IndexAssignExpr(AccessExpr* arr, NumericExpr* idx, Expr* val) : IndexExpr(arr, idx),
                                                                                  assignment(val) { }
 
 IndexAssignExpr* IndexAssignExpr::syntaxCopy() {

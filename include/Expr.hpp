@@ -6,19 +6,23 @@
 #include "util.hpp"
 #include "types.hpp"
 
-struct Visitor;
+class Visitor;
 
 struct Expr {
-    bool isRvalue = false;
+    bool rvalue = false;
 
     virtual bool isAtomic() const = 0;
+
     virtual Expr* syntaxCopy() = 0;
+
     virtual void accept(Visitor*) = 0;
 };
 
 struct NumericExpr : public Expr {
     virtual NumericExpr* syntaxCopy() override = 0;
-    virtual f32_t asFloat() const   = 0;
+
+    virtual f32_t asFloat() const = 0;
+
     virtual i32_t asInteger() const = 0;
 };
 
@@ -66,7 +70,7 @@ struct CharExpr : public NumericExpr {
     virtual void accept(Visitor*) override;
 };
 
-template <typename T>
+template<typename T>
 struct BinaryExpr : public Expr {
     std::unique_ptr<T> left;
     std::unique_ptr<T> right;
@@ -122,7 +126,7 @@ struct DivExpr : public BinaryNumericExpr {
     virtual void accept(Visitor*) override;
 };
 
-template <typename T>
+template<typename T>
 struct UnaryExpr : public Expr {
     std::unique_ptr<T> exp;
 
@@ -162,8 +166,10 @@ struct NegateExpr : public UnaryNumericExpr {
 };
 
 struct AccessExpr : public Expr {
-    virtual void setAt(i32_t, Expr*) = 0;
-    virtual Expr      * getAt(i32_t) = 0;
+    virtual void setAt(u32_t, Expr*) = 0;
+
+    virtual Expr* getAt(u32_t) = 0;
+
     virtual AccessExpr* syntaxCopy() = 0;
 };
 
@@ -172,9 +178,9 @@ struct ArrayExpr : public AccessExpr {
 
     void add(Expr*);
 
-    void setAt(i32_t, Expr*) override;
+    void setAt(u32_t, Expr*) override;
 
-    Expr* getAt(i32_t) override;
+    Expr* getAt(u32_t) override;
 
     virtual bool isAtomic() const override {
         return false;
@@ -185,18 +191,27 @@ struct ArrayExpr : public AccessExpr {
     virtual void accept(Visitor*) override;
 };
 
-struct IndexAssignExpr : public Expr {
+struct IndexExpr : public Expr {
     AccessExpr* array;
     std::unique_ptr<NumericExpr> index;
-    std::unique_ptr<Expr>        assignment;
 
-    IndexAssignExpr(AccessExpr*, NumericExpr*, Expr*);
+    explicit IndexExpr(AccessExpr*, NumericExpr*);
 
-    virtual IndexAssignExpr* syntaxCopy() override;
+    virtual IndexExpr* syntaxCopy() override;
 
     virtual bool isAtomic() const override {
         return false;
     }
+
+    virtual void accept(Visitor*) override;
+};
+
+struct IndexAssignExpr : public IndexExpr {
+    std::unique_ptr<Expr> assignment;
+
+    explicit IndexAssignExpr(AccessExpr*, NumericExpr*, Expr*);
+
+    virtual IndexAssignExpr* syntaxCopy() override;
 
     virtual void accept(Visitor*) override;
 };

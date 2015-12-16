@@ -9,13 +9,13 @@ void writeln(const T& val) {
 }
 
 template <typename T, typename ...Args>
-void writeln(const T& val, const Args& ...args) {
+void writeln(const T& val, const Args ...args) {
     std::cout << val;
     writeln(args...);
 }
 
 template <typename ...Args>
-void assert(bool cond, const Args& ...args) {
+void assert(bool cond, const Args ...args) {
     if (!cond) {
         writeln(args...);
 
